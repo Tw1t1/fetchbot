@@ -1,0 +1,65 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+    <gazebo reference="base_link">
+        <material>Gazebo/Grey</material>
+    </gazebo>
+
+    <gazebo reference="left_wheels_base_link">
+        <material>Gazebo/Red</material>
+    </gazebo>
+
+    <gazebo reference="right_wheels_base_link">
+        <material>Gazebo/Green</material>
+    </gazebo>
+
+    <gazebo reference="left_motor_link">
+        <material>Gazebo/Purple</material>
+    </gazebo>
+
+    <gazebo reference="right_motor_link">
+        <material>Gazebo/Purple</material>
+    </gazebo>
+
+    <gazebo reference="left_front_wheel_link">
+        <material>Gazebo/Blue</material>
+    </gazebo>
+
+    <gazebo reference="left_back_wheel_link">
+        <material>Gazebo/Blue</material>
+    </gazebo>
+
+    <gazebo reference="right_front_wheel_link">
+        <material>Gazebo/Blue</material>
+    </gazebo>
+
+    <gazebo reference="right_back_wheel_link">
+        <material>Gazebo/Blue</material>
+    </gazebo>
+
+    <gazebo>
+        <plugin name="diff_drive_controller" filename="libgazebo_ros_diff_drive.so">
+            <!-- Update rate in Hz -->
+            <update_rate>50</update_rate>
+            <!-- wheels -->
+            <num_wheel_pairs>3</num_wheel_pairs>
+            <left_joint>left_wheels_base_left_motor_joint</left_joint>
+            <left_joint>left_wheels_base_left_front_wheel_joint</left_joint>
+            <left_joint>left_wheels_base_left_back_wheel_joint</left_joint>
+            <right_joint>right_wheels_base_right_motor_joint</right_joint>
+            <right_joint>right_wheels_base_right_front_wheel_joint</right_joint>
+            <right_joint>right_wheels_base_right_back_wheel_joint</right_joint>
+            <!-- kinematics -->
+            <wheel_separation>${base_width + wheel_length}</wheel_separation>
+            <wheel_diameter>${wheel_radius * 2}</wheel_diameter>
+            <!-- output -->
+            <publish_odom>true</publish_odom>
+            <publish_odom_tf>true</publish_odom_tf>
+            <publish_wheel_tf>true</publish_wheel_tf>
+            <odometry_topic>odom</odometry_topic>
+            <odometry_frame>odom</odometry_frame>
+            <robot_base_frame>base_footprint</robot_base_frame>
+        </plugin>
+    </gazebo>
+
+</robot>
