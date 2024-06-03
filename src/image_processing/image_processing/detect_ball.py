@@ -15,13 +15,12 @@
 # limitations under the License.
 
 import rclpy
-from rclpy.node import Node
-from sensor_msgs.msg        import Image
-from geometry_msgs.msg      import Point
-from cv_bridge              import CvBridge, CvBridgeError
-import image_processing.process_image as proc
-
-import cv2 as cv
+from rclpy.node                         import Node
+from sensor_msgs.msg                    import Image
+from geometry_msgs.msg                  import Point
+from cv_bridge                          import CvBridge, CvBridgeError
+import image_processing.process_image   as proc
+import cv2                              as cv
 
 class DetectBall(Node):
 
@@ -29,33 +28,26 @@ class DetectBall(Node):
 
         super().__init__('detect_ball')
 
-        self.get_logger().info('Looking for the ball...')
-        self.image_sub = self.create_subscription(Image,"/image_in",self.callback,rclpy.qos.QoSPresetProfiles.SENSOR_DATA.value)
+        self.image_sub = self.create_subscription(Image, "/image_in",self.callback, rclpy.qos.QoSPresetProfiles.SENSOR_DATA.value)
         self.image_out_pub = self.create_publisher(Image, "/image_out", 1)
         self.image_tuning_pub = self.create_publisher(Image, "/image_tuning", 1)
-        self.ball_pub  = self.create_publisher(Point,"/detected_ball",1)
+        self.ball_pub  = self.create_publisher(Point, "/detected_ball", 1)
 
+        
         self.declare_parameter('tuning_mode', False)
 
-        self.declare_parameter("x_min",0)
-        self.declare_parameter("x_max",100)
-        self.declare_parameter("y_min",0)
-        self.declare_parameter("y_max",100)
-        self.declare_parameter("h_min",0)
-        self.declare_parameter("h_max",180)
-        self.declare_parameter("s_min",0)
+        self.declare_parameter("h_min",30)
+        self.declare_parameter("h_max",48)
+        self.declare_parameter("s_min",60)
         self.declare_parameter("s_max",255)
-        self.declare_parameter("v_min",0)
+        self.declare_parameter("v_min",150)
         self.declare_parameter("v_max",255)
         self.declare_parameter("sz_min",0)
         self.declare_parameter("sz_max",100)
         
         self.tuning_mode = self.get_parameter('tuning_mode').get_parameter_value().bool_value
+
         self.tuning_params = {
-            'x_min': self.get_parameter('x_min').get_parameter_value().integer_value,
-            'x_max': self.get_parameter('x_max').get_parameter_value().integer_value,
-            'y_min': self.get_parameter('y_min').get_parameter_value().integer_value,
-            'y_max': self.get_parameter('y_max').get_parameter_value().integer_value,
             'h_min': self.get_parameter('h_min').get_parameter_value().integer_value,
             'h_max': self.get_parameter('h_max').get_parameter_value().integer_value,
             's_min': self.get_parameter('s_min').get_parameter_value().integer_value,
@@ -71,12 +63,17 @@ class DetectBall(Node):
         if(self.tuning_mode):
             proc.create_tuning_window(self.tuning_params)
 
+        self.get_logger().info("Detect Ball Node has been started.")
+        self.get_logger().info('Looking for the ball...')
+
+
     def callback(self,data):
 
         try:
             cv_image = self.bridge.imgmsg_to_cv2(data, "bgr8")
         except CvBridgeError as e:
-            print(e)
+            self.get_logger().error(e)
+            # print(e)
 
         try:
             if (self.tuning_mode):
@@ -87,7 +84,7 @@ class DetectBall(Node):
 
             cv.imshow("Out Image", out_image)
             cv.imshow("Tuning Image", tuning_image)
-            cv.waitKey(1)
+            proc.wait_on_gui()
 
 
             img_to_pub = self.bridge.cv2_to_imgmsg(out_image, "bgr8")
@@ -116,9 +113,10 @@ class DetectBall(Node):
 
             if (point_out.z > 0):
                 self.ball_pub.publish(point_out)
-        except CvBridgeError as e:
-            print(e)  
 
+        except CvBridgeError as e:
+            self.get_logger().error(e)
+            # print(e)
 
 def main(args=None):
 
