@@ -23,7 +23,13 @@
         </joint>
     </ros2_control>
 
-    <gazebo reference="base_link">
+    <gazebo>
+        <plugin name="gazebo_ros2_control" filename="libgazebo_ros2_control.so">
+            <parameters>$(find fetchbot_description)/config/my_controllers.yaml</parameters>
+        </plugin>
+    </gazebo>
+
+        <gazebo reference="base_link">
         <material>Gazebo/Grey</material>
     </gazebo>
 
@@ -57,12 +63,6 @@
 
     <gazebo reference="right_back_wheel_link">
         <material>Gazebo/Blue</material>
-    </gazebo>
-
-    <gazebo>
-        <plugin name="gazebo_ros2_control" filename="libgazebo_ros2_control.so">
-            <parameters>$(find fetchbot_description)/config/my_controllers.yaml</parameters>
-        </plugin>
     </gazebo>
 
 </robot>

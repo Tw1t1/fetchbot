@@ -3,7 +3,7 @@
           value="$(find-pkg-share fetchbot_description)/urdf/fetchbot.urdf.xacro" />
     <let name="rviz_config_path"
           value="$(find-pkg-share fetchbot_bringup)/rviz/urdf_config.rviz" />
-     <let name="gazebo_world_path"
+    <let name="gazebo_world_path"
           value="$(find-pkg-share fetchbot_bringup)/worlds/my_world.world" />
 
     <node pkg="robot_state_publisher" exec="robot_state_publisher">
