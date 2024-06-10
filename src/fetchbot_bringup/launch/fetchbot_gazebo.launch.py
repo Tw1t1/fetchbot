@@ -45,10 +45,24 @@ def generate_launch_description():
         arguments=['-topic', 'robot_description','-entity', 'fetchbot']
     )
 
+    # diff_drive_spawner = Node(
+    #     package="controller_manager",
+    #     executable="spawner.py",
+    #     arguments=["diff_cont"],
+    # )
+
+    # joint_broad_spawner = Node(
+    #     package="controller_manager",
+    #     executable="spawner.py",
+    #     arguments=["joint_broad"],
+    # )
+
     return LaunchDescription([
         robot_state_publisher_node,
         # joint_state_publisher_gui_node,
         rviz2_node,
         gazebo,
-        spawn_entity
+        spawn_entity,
+        # diff_drive_spawner,
+        # joint_broad_spawner
     ])
