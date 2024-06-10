@@ -61,7 +61,8 @@
         </joint>
 
     </ros2_control> 
-
+    
+    <!-- gazebo_ros2_control plugin -->
     <gazebo>
         <plugin filename="libgazebo_ros2_control.so" name="gazebo_ros2_control">
             <robot_param>robot_description</robot_param>
@@ -70,7 +71,6 @@
             <controller_manager_name>simulation_controller_manager</controller_manager_name>
         </plugin>
     </gazebo>
-
 
     <gazebo reference="base_link">
         <material>Gazebo/Grey</material>
