@@ -27,7 +27,7 @@ class DetectBall(Node):
     def __init__(self):
 
         super().__init__('detect_ball')
-
+        
         self.image_sub = self.create_subscription(Image, "/image_in",self.callback, rclpy.qos.QoSPresetProfiles.SENSOR_DATA.value)
         self.image_out_pub = self.create_publisher(Image, "/image_out", 1)
         self.image_tuning_pub = self.create_publisher(Image, "/image_tuning", 1)

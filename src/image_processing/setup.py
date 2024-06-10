@@ -21,6 +21,7 @@ setup(
     entry_points={
         'console_scripts': [
             "video_publisher = image_processing.usb_camera:main",
+            "follow_ball = image_processing.follow_ball:main",
             "detect_ball = image_processing.detect_ball:main"            
         ],
     },
