@@ -32,11 +32,12 @@ def generate_launch_description():
     )
 
     gazebo_world_path = os.path.join(get_package_share_path('fetchbot_bringup'),'worlds','my_world.world"')
+    gazebo_params_file = os.path.join(get_package_share_path('fetchbot_description'),'config','gazebo_params.yaml')
 
     gazebo = IncludeLaunchDescription(
                 PythonLaunchDescriptionSource([os.path.join(
                     get_package_share_path('gazebo_ros'), 'launch', 'gazebo.launch.py')]),
-                    launch_arguments={'world': gazebo_world_path}.items()
+                    launch_arguments={'world': gazebo_world_path, 'extra_gazebo_args': '--ros-args --params-file ' + gazebo_params_file}.items()
     )
 
     spawn_entity = Node(
@@ -45,17 +46,17 @@ def generate_launch_description():
         arguments=['-topic', 'robot_description','-entity', 'fetchbot']
     )
 
-    # diff_drive_spawner = Node(
-    #     package="controller_manager",
-    #     executable="spawner.py",
-    #     arguments=["diff_cont"],
-    # )
+    diff_drive_spawner = Node(
+        package="controller_manager",
+        executable="spawner",
+        arguments=["diff_cont"],
+    )
 
-    # joint_broad_spawner = Node(
-    #     package="controller_manager",
-    #     executable="spawner.py",
-    #     arguments=["joint_broad"],
-    # )
+    joint_broad_spawner = Node(
+        package="controller_manager",
+        executable="spawner",
+        arguments=["joint_broad"],
+    )
 
     return LaunchDescription([
         robot_state_publisher_node,
@@ -63,6 +64,6 @@ def generate_launch_description():
         rviz2_node,
         gazebo,
         spawn_entity,
-        # diff_drive_spawner,
-        # joint_broad_spawner
+        diff_drive_spawner,
+        joint_broad_spawner
     ])

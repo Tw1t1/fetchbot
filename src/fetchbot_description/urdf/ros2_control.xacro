@@ -94,18 +94,26 @@
 
     <gazebo reference="left_front_wheel_link">
         <material>Gazebo/Blue</material>
+        <mu1 value="1"/>
+        <mu2 value="1"/>
     </gazebo>
 
     <gazebo reference="left_back_wheel_link">
         <material>Gazebo/Blue</material>
+        <mu1 value="1"/>
+        <mu2 value="1"/>
     </gazebo>
 
     <gazebo reference="right_front_wheel_link">
         <material>Gazebo/Blue</material>
+        <mu1 value="1"/>
+        <mu2 value="1"/>
     </gazebo>
 
     <gazebo reference="right_back_wheel_link">
         <material>Gazebo/Blue</material>
+        <mu1 value="1"/>
+        <mu2 value="1"/>
     </gazebo>
 
 </robot>
