@@ -10,8 +10,8 @@ def find_circles(image, tuning_params):
     thresh_min = (tuning_params["h_min"], tuning_params["s_min"], tuning_params["v_min"])
     thresh_max = (tuning_params["h_max"], tuning_params["s_max"], tuning_params["v_max"])
     
-    a = find_circles_a(image, thresh_min, thresh_max) 
-    b = find_circles_b(image, thresh_min, thresh_max) 
+    # a = find_circles_a(image, thresh_min, thresh_max) 
+    # b = find_circles_b(image, thresh_min, thresh_max) 
     c = find_circles_c(image, tuning_params)
     
     return c
@@ -50,7 +50,7 @@ def find_circles_a(image, thresh_min, thresh_max):
         center = (int(M["m10"] / M["m00"]), int(M["m01"] / M["m00"]))
 
         # contourIdx represent index of contours, -1 mean all contours 
-        cv.drawContours(image, cnts, contourIdx=-1, color=purple, thickness=2)
+        cv.drawContours(image, cnts, contourIdx=-1, color=(128,0,128), thickness=2)
 
     return center, radius
 
@@ -195,24 +195,24 @@ def normalise_keypoint(cv_image, kp):
 
 
 def create_tuning_window(initial_values):
-    cv2.namedWindow("Tuning", 0)
-    cv2.createTrackbar("h_min","Tuning",initial_values['h_min'],180,no_op)
-    cv2.createTrackbar("h_max","Tuning",initial_values['h_max'],180,no_op)
-    cv2.createTrackbar("s_min","Tuning",initial_values['s_min'],255,no_op)
-    cv2.createTrackbar("s_max","Tuning",initial_values['s_max'],255,no_op)
-    cv2.createTrackbar("v_min","Tuning",initial_values['v_min'],255,no_op)
-    cv2.createTrackbar("v_max","Tuning",initial_values['v_max'],255,no_op)
-    cv2.createTrackbar("sz_min","Tuning",initial_values['sz_min'],100,no_op)
-    cv2.createTrackbar("sz_max","Tuning",initial_values['sz_max'],100,no_op)
+    cv.namedWindow("Tuning", 0)
+    cv.createTrackbar("h_min","Tuning",initial_values['h_min'],180,no_op)
+    cv.createTrackbar("h_max","Tuning",initial_values['h_max'],180,no_op)
+    cv.createTrackbar("s_min","Tuning",initial_values['s_min'],255,no_op)
+    cv.createTrackbar("s_max","Tuning",initial_values['s_max'],255,no_op)
+    cv.createTrackbar("v_min","Tuning",initial_values['v_min'],255,no_op)
+    cv.createTrackbar("v_max","Tuning",initial_values['v_max'],255,no_op)
+    cv.createTrackbar("sz_min","Tuning",initial_values['sz_min'],100,no_op)
+    cv.createTrackbar("sz_max","Tuning",initial_values['sz_max'],100,no_op)
 
 
 def get_tuning_params():
     trackbar_names = ["h_min","h_max","s_min","s_max","v_min","v_max","sz_min","sz_max"]
-    return {key:cv2.getTrackbarPos(key, "Tuning") for key in trackbar_names}
+    return {key:cv.getTrackbarPos(key, "Tuning") for key in trackbar_names}
 
 
 def wait_on_gui():
-    cv2.waitKey(2)
+    cv.waitKey(2)
 
 
 def no_op(x):

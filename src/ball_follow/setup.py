@@ -1,6 +1,6 @@
 from setuptools import find_packages, setup
 
-package_name = 'image_processing'
+package_name = 'ball_follow'
 
 setup(
     name=package_name,
@@ -20,9 +20,9 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            "video_publisher = image_processing.usb_camera:main",
-            "follow_ball = image_processing.follow_ball:main",
-            "detect_ball = image_processing.detect_ball:main"            
+            "video_publisher = ball_follow.usb_camera:main",
+            "follow_ball = ball_follow.follow_ball:main",
+            "detect_ball = ball_follow.detect_ball:main"            
         ],
     },
 )
