@@ -2,39 +2,23 @@
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro">
 
     <gazebo reference="base_link">
-        <material>Gazebo/Grey</material>
-    </gazebo>
-
-    <gazebo reference="left_wheels_base_link">
-        <material>Gazebo/Red</material>
-    </gazebo>
-
-    <gazebo reference="right_wheels_base_link">
-        <material>Gazebo/Green</material>
-    </gazebo>
-
-    <gazebo reference="left_motor_link">
-        <material>Gazebo/Purple</material>
-    </gazebo>
-
-    <gazebo reference="right_motor_link">
-        <material>Gazebo/Purple</material>
+        <material>Gazebo/Blue</material>
     </gazebo>
 
     <gazebo reference="left_front_wheel_link">
-        <material>Gazebo/Blue</material>
+        <material>Gazebo/Red</material>
     </gazebo>
 
     <gazebo reference="left_back_wheel_link">
-        <material>Gazebo/Blue</material>
+        <material>Gazebo/Red</material>
     </gazebo>
 
     <gazebo reference="right_front_wheel_link">
-        <material>Gazebo/Blue</material>
+        <material>Gazebo/Green</material>
     </gazebo>
 
     <gazebo reference="right_back_wheel_link">
-        <material>Gazebo/Blue</material>
+        <material>Gazebo/Green</material>
     </gazebo>
 
     <gazebo>
@@ -43,12 +27,10 @@
             <update_rate>50</update_rate>
             <!-- wheels -->
             <num_wheel_pairs>3</num_wheel_pairs>
-            <left_joint>left_wheels_base_left_motor_joint</left_joint>
-            <left_joint>left_wheels_base_left_front_wheel_joint</left_joint>
-            <left_joint>left_wheels_base_left_back_wheel_joint</left_joint>
-            <right_joint>right_wheels_base_right_motor_joint</right_joint>
-            <right_joint>right_wheels_base_right_front_wheel_joint</right_joint>
-            <right_joint>right_wheels_base_right_back_wheel_joint</right_joint>
+            <left_joint>left_front_wheel_joint</left_joint>
+            <left_joint>left_back_wheel_joint</left_joint>
+            <right_joint>right_front_wheel_joint</right_joint>
+            <right_joint>right_back_wheel_joint</right_joint>
             <!-- kinematics -->
             <wheel_separation>${base_width + wheel_length}</wheel_separation>
             <wheel_diameter>${wheel_radius * 2}</wheel_diameter>
