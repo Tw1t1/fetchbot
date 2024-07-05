@@ -31,7 +31,7 @@ def generate_launch_description():
         arguments=['-d', rviz_config_path]
     )
 
-    gazebo_world_path = os.path.join(get_package_share_path('fetchbot_bringup'),'worlds','my_world.world"')
+    gazebo_world_path = os.path.join(get_package_share_path('fetchbot_bringup'),'worlds','obstacles.world"')
     gazebo_params_file = os.path.join(get_package_share_path('fetchbot_description'),'config','gazebo_params.yaml')
 
     gazebo = IncludeLaunchDescription(
