@@ -23,10 +23,8 @@ class FollowBall(Node):
     def __init__(self):
         super().__init__('follow_ball')
         self.subscription = self.create_subscription(
-            Point,
-            '/detected_ball',
-            self.listener_callback,
-            10)
+            Point, '/detected_ball', self.listener_callback, 10)
+        
         self.publisher_ = self.create_publisher(Twist, '/cmd_vel', 10)
 
 
@@ -55,8 +53,8 @@ class FollowBall(Node):
     def timer_callback(self):
         msg = Twist()
         if (time.time() - self.lastrcvtime < self.rcv_timeout_secs):
-            self.get_logger().info('Target: {}'.format(self.target_val))
-            print(self.target_dist)
+            self.get_logger().info('Target: {}\nDistance: {}'.format(self.target_val, self.target_dist))
+            
             if (self.target_dist < self.max_size_thresh):
                 msg.linear.x = self.forward_chase_speed
             msg.angular.z = -self.angular_chase_multiplier*self.target_val
@@ -70,7 +68,7 @@ class FollowBall(Node):
         self.target_val = self.target_val * f + msg.x * (1-f)
         self.target_dist = self.target_dist * f + msg.z * (1-f)
         self.lastrcvtime = time.time()
-        # self.get_logger().info('Received: {} {}'.format(msg.x, msg.y))
+        self.get_logger().info('Received Point: {} {} {}'.format(msg.x, msg.y, msg.z))
 
 
 def main(args=None):

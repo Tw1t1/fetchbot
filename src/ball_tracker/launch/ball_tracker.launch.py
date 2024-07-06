@@ -44,12 +44,11 @@ def generate_launch_description():
     image_topic = LaunchConfiguration('image_topic')
     image_topic_dec = DeclareLaunchArgument(
         'image_topic',
-        default_value='/camera/image_raw',
+        default_value='/camera_sensor/image_raw',
         description='The name of the input image topic.')
 
     cmd_vel_topic = LaunchConfiguration('cmd_vel_topic')
-    cmd_vel_topic_dec = DeclareLaunchArgument(
-    'cmd_vel_topic',
+    cmd_vel_topic_dec = DeclareLaunchArgument('cmd_vel_topic',
     default_value='/cmd_vel',
     description='The name of the output command vel topic.')
 
@@ -81,7 +80,8 @@ def generate_launch_description():
             package='ball_tracker',
             executable='follow_ball',
             parameters=[params_file, {'use_sim_time': use_sim_time}],
-            remappings=[('/cmd_vel',cmd_vel_topic)],
+            # remappings=[('/cmd_vel',cmd_vel_topic)],
+            remappings=[('/cmd_vel','/diff_cont/cmd_vel_unstamped')],
             condition=UnlessCondition(detect_only)
          )
 
