@@ -30,5 +30,10 @@
 
       <node pkg="controller_manager" exec="spawner" output="screen" 
           args="joint_broad" />
+          
+    <node pkg="obstacle_avoidance" exec="feel_force" output="screen" />
+
+    <node pkg="obstacle_avoidance" exec="run_away" output="screen" />
+
 
 </launch>
