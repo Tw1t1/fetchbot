@@ -26,6 +26,9 @@ setup(
             'detect_ball = ball_tracker.detect_ball:main',
             'detect_ball_3d = ball_tracker.detect_ball_3d:main',
             'follow_ball = ball_tracker.follow_ball:main',
+            'inhibit_detect_ball = ball_tracker.inhibit_detect_ball:main',
+            'inhibit_follow_ball = ball_tracker.inhibit_follow_ball:main',
+            
         ],
     },
 )

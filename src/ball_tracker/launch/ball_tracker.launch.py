@@ -85,6 +85,22 @@ def generate_launch_description():
             condition=UnlessCondition(detect_only)
          )
 
+    inhibit_detect_ball_node = Node(
+            package='ball_tracker',
+            executable='inhibit_detect_ball',
+            # TODO: remapp the topic in follow ball 
+            #parameters=[params_file, {'use_sim_time': use_sim_time}],
+            # remappings=[('/topic_a','/detected_ball'), ('/topic_b','/TBD'), ('/topic_c', '/ball_info')], 
+         )
+    
+    inhibit_follow_ball_node = Node(
+            package='ball_tracker',
+            executable='inhibit_follow_ball',
+
+            #parameters=[params_file, {'use_sim_time': use_sim_time}],
+            # remappings=[('/topic_a','/heading/ball_follow'), ('/topic_b','/TBD'), ('/topic_c', '/heading/ball_follow/inhibit')],
+
+         )
 
 
 
@@ -99,5 +115,7 @@ def generate_launch_description():
         enable_3d_tracker_dec,
         detect_node,
         detect_3d_node,
-        follow_node,    
+        follow_node,
+        inhibit_detect_ball_node,
+        inhibit_follow_ball_node,
     ])
