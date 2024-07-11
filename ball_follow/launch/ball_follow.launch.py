@@ -14,8 +14,8 @@ def generate_launch_description():
     params_file = LaunchConfiguration('params_file')
     params_file_dec = DeclareLaunchArgument(
         'params_file',
-        default_value=os.path.join(get_package_share_directory('ball_tracker'),'config','ball_tracker_params_example.yaml'),
-        description='Full path to params file for all ball_tracker nodes.')
+        default_value=os.path.join(get_package_share_directory('ball_follow'),'config','ball_follow_params_example.yaml'),
+        description='Full path to params file for all ball_follow nodes.')
 
     detect_only = LaunchConfiguration('detect_only')
     detect_only_dec = DeclareLaunchArgument(
@@ -62,7 +62,7 @@ def generate_launch_description():
 
 
     detect_node = Node(
-            package='ball_tracker',
+            package='ball_follow',
             executable='detect_ball',
             parameters=[params_file, {'tuning_mode': tune_detection}],
             remappings=[('/image_in',image_topic)],
@@ -70,14 +70,14 @@ def generate_launch_description():
          )
 
     detect_3d_node = Node(
-            package='ball_tracker',
+            package='ball_follow',
             executable='detect_ball_3d',
             parameters=[params_file],
             condition=IfCondition(enable_3d_tracker)
          )
 
     follow_node = Node(
-            package='ball_tracker',
+            package='ball_follow',
             executable='follow_ball',
             parameters=[params_file, {'use_sim_time': use_sim_time}],
             # remappings=[('/cmd_vel',cmd_vel_topic)],
@@ -86,7 +86,7 @@ def generate_launch_description():
          )
 
     inhibit_detect_ball_node = Node(
-            package='ball_tracker',
+            package='ball_follow',
             executable='inhibit_detect_ball',
             # TODO: remapp the topic in follow ball 
             #parameters=[params_file, {'use_sim_time': use_sim_time}],
@@ -94,7 +94,7 @@ def generate_launch_description():
          )
     
     inhibit_follow_ball_node = Node(
-            package='ball_tracker',
+            package='ball_follow',
             executable='inhibit_follow_ball',
 
             #parameters=[params_file, {'use_sim_time': use_sim_time}],

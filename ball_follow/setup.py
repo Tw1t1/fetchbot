@@ -1,7 +1,7 @@
 from setuptools import setup
 from glob import glob
 
-package_name = 'ball_tracker'
+package_name = 'ball_follow'
 
 setup(
     name=package_name,
@@ -23,11 +23,11 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'detect_ball = ball_tracker.detect_ball:main',
-            'detect_ball_3d = ball_tracker.detect_ball_3d:main',
-            'follow_ball = ball_tracker.follow_ball:main',
-            'inhibit_detect_ball = ball_tracker.inhibit_detect_ball:main',
-            'inhibit_follow_ball = ball_tracker.inhibit_follow_ball:main',
+            'detect_ball = ball_follow.detect_ball:main',
+            'detect_ball_3d = ball_follow.detect_ball_3d:main',
+            'follow_ball = ball_follow.follow_ball:main',
+            'inhibit_detect_ball = ball_follow.inhibit_detect_ball:main',
+            'inhibit_follow_ball = ball_follow.inhibit_follow_ball:main',
             
         ],
     },

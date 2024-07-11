@@ -17,7 +17,7 @@ from rclpy.node import Node
 from sensor_msgs.msg        import Image
 from geometry_msgs.msg      import Point
 from cv_bridge              import CvBridge, CvBridgeError
-import ball_tracker.process_image as proc
+import ball_follow.process_image as proc
 
 class DetectBall(Node):
 
