@@ -21,6 +21,7 @@ class AvoidRunawaySuppressorNode(Node):
             10
         )
         self.publisher = self.create_publisher(Twist, '/diff_cont/cmd_vel_unstamped', 10)
+        # self.publisher = self.create_publisher(Twist, '/heading/avoid_runaway_suppressor', 10)  # Debugging
         self.last_avoid_time = time.time()
         self.avoid_heading = None
         self.runaway_heading = None

@@ -48,7 +48,7 @@ class FeelForceNode(Node):
 
         # Calculate the magnitude and angle of the net force
         magnitude = math.sqrt(net_force_x**2 + net_force_y**2)  # Calculate the magnitude
-        angle = math.degrees(math.atan2(net_force_y, net_force_x))  # Calculate the angle in degrees
+        angle = math.atan2(net_force_y, net_force_x) # Calculate the angle in radians
 
         # Create a FeelForce message
         force = Force()

@@ -15,7 +15,8 @@ class RunAwayNode(Node):
             10)
         self.publisher = self.create_publisher(Heading, '/heading/runaway', 10)
         self.min_force_threshold = 33  # Adjust as needed
-        self.max_speed = 3.0  # Adjust as needed
+        self.max_speed = 1.5  # Adjust as needed
+        self.max_magnitude = 60  # Adjust as needed
 
     def force_callback(self, msg):
         # If the force is greater than the threshold, calculate the heading
@@ -27,14 +28,16 @@ class RunAwayNode(Node):
         heading = Heading()
 
         # Simple obstacle avoidance: if there's a force, move away from it
-        heading.distance = -force.magnitude
-        heading.angle = -force.direction
+        distance = 1.0   # Set the distance to defualt 1
+        # Move backwards if the force is in front of the robot
+        distance = -distance if abs(force.direction) < math.pi/2 and self.max_magnitude < force.magnitude else distance
+        self.get_logger().info(f"close and infont: {abs(force.direction) < math.pi/2 and self.max_magnitude < force.magnitude}")
         
-        # Normalize the heading to be within the range of max_speed
-        if abs(heading.distance) > self.max_speed:
-            heading.distance = abs(heading.distance) / heading.distance
-        if abs(heading.angle) > self.max_speed:
-            heading.angle = abs(heading.angle) / heading.angle
+        # Calculate the opposite direction angle
+        opposite_angle = force.direction + math.pi if force.direction < 0 else force.direction - math.pi
+        
+        heading.distance = distance
+        heading.angle = opposite_angle
         
         return heading
 
