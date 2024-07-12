@@ -21,7 +21,7 @@ setup(
     entry_points={
         'console_scripts': [
             'feel_force = obstacle_avoidance.feel_force:main',
-            'run_away = obstacle_avoidance.run_away:main',
+            'runaway = obstacle_avoidance.runaway:main',
         ],
     },
 )

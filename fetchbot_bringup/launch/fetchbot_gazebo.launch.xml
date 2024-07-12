@@ -33,7 +33,7 @@
           
     <node pkg="obstacle_avoidance" exec="feel_force" output="screen" />
 
-    <node pkg="obstacle_avoidance" exec="run_away" output="screen" />
+    <node pkg="obstacle_avoidance" exec="runaway" output="screen" />
 
 
 </launch>
