@@ -1,16 +1,4 @@
-# Copyright 2023 Josh Newans
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# Copyright 2023 Josh Newans (modifications by Yosef Seada)
 
 import rclpy
 from rclpy.node import Node
@@ -22,10 +10,9 @@ class FollowBall(Node):
 
     def __init__(self):
         super().__init__('follow_ball')
-        self.subscription = self.create_subscription(
-            Point, '/detected_ball', self.listener_callback, 10)
-        
-        self.publisher_ = self.create_publisher(Twist, '/cmd_vel', 10)
+
+        self.subscription = self.create_subscription(Point, '/detected_ball', self.listener_callback, 10)
+        self.publisher_ = self.create_publisher(Twist, '/ball_follow', 10)
 
 
         self.declare_parameter("rcv_timeout_secs", 1.0)
@@ -51,10 +38,12 @@ class FollowBall(Node):
         self.lastrcvtime = time.time() - 10000
 
     def timer_callback(self):
+        
         msg = Twist()
         if (time.time() - self.lastrcvtime < self.rcv_timeout_secs):
-            self.get_logger().info('Target: {}\nDistance: {}'.format(self.target_val, self.target_dist))
-            
+
+            self.get_logger().info(f'Target: {self.target_val}, Distance: {self.target_dist}')
+        
             if (self.target_dist < self.max_size_thresh):
                 msg.linear.x = self.forward_chase_speed
             msg.angular.z = -self.angular_chase_multiplier*self.target_val
@@ -68,7 +57,7 @@ class FollowBall(Node):
         self.target_val = self.target_val * f + msg.x * (1-f)
         self.target_dist = self.target_dist * f + msg.z * (1-f)
         self.lastrcvtime = time.time()
-        self.get_logger().info('Received Point: {} {} {}'.format(msg.x, msg.y, msg.z))
+        self.get_logger().info(f'Received Point: ({msg.x}, {msg.y}) | ball size: {msg.z}')
 
 
 def main(args=None):

@@ -1,23 +1,11 @@
-# Copyright 2023 Josh Newans
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# Based on Josh Newans code (modifications by Yosef Seada)
 
 import rclpy
 from rclpy.node import Node
 from sensor_msgs.msg        import Image
 from geometry_msgs.msg      import Point
 from cv_bridge              import CvBridge, CvBridgeError
-import ball_follow.process_image as proc
+import ball_follow.my_proc_image as proc
 
 class DetectBall(Node):
 
@@ -58,7 +46,8 @@ class DetectBall(Node):
             'v_min': self.get_parameter('v_min').get_parameter_value().integer_value,
             'v_max': self.get_parameter('v_max').get_parameter_value().integer_value,
             'sz_min': self.get_parameter('sz_min').get_parameter_value().integer_value,
-            'sz_max': self.get_parameter('sz_max').get_parameter_value().integer_value
+            'sz_max': self.get_parameter('sz_max').get_parameter_value().integer_value,
+
         }
 
         self.bridge = CvBridge()
@@ -66,13 +55,12 @@ class DetectBall(Node):
         if(self.tuning_mode):
             proc.create_tuning_window(self.tuning_params)
 
-    def callback(self,data):
-        try:
-            cv_image = self.bridge.imgmsg_to_cv2(data, "bgr8")
-        except CvBridgeError as e:
-            print(e)
 
+    def callback(self,data):
+        
         try:
+
+            cv_image = self.bridge.imgmsg_to_cv2(data, "bgr8")
             if (self.tuning_mode):
                 self.tuning_params = proc.get_tuning_params()
 
@@ -88,23 +76,25 @@ class DetectBall(Node):
 
             point_out = Point()
 
-            # Keep the biggest point
-            # They are already converted to normalised coordinates
+            p = 0
+            # Keep the biggest point, They are already converted to normalised coordinates
             for i, kp in enumerate(keypoints_norm):
                 x = kp.pt[0]
                 y = kp.pt[1]
                 s = kp.size
+                temp = kp.response
 
-                self.get_logger().info(f"Pt {i}: ({x},{y},{s})")
+                self.get_logger().info(f"Pt {i}: ({x}, {y}),  {s}, {kp.response})")
 
                 if (s > point_out.z):                    
                     point_out.x = x
                     point_out.y = y
                     point_out.z = s
-
+                    p = temp
             if (point_out.z > 0):
                 self.ball_pub.publish(point_out) 
         except CvBridgeError as e:
+            self.get_logger().error(e)
             print(e)  
 
 
@@ -116,7 +106,6 @@ def main(args=None):
     while rclpy.ok():
         rclpy.spin_once(detect_ball)
         proc.wait_on_gui()
-
     detect_ball.destroy_node()
     rclpy.shutdown()
 

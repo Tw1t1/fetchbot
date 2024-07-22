@@ -12,7 +12,7 @@ detect_ball:
     v_min: 0
     v_max: 255
     sz_min: 0
-    sz_max: 20
+    sz_max: 40 # original was 20, we need 40 value for recognize the ball larger (close to the camera)
 
 detect_ball_3d:
   ros__parameters:
@@ -26,5 +26,5 @@ follow_ball:
     angular_chase_multiplier: 0.7
     forward_chase_speed: 0.1
     search_angular_speed: 0.5
-    max_size_thresh: 0.1 
+    max_size_thresh: 0.25 # [0,1] range, closer to 1 mean robt can get closer to the ball. original was 0.1. 
     filter_value: 0.9

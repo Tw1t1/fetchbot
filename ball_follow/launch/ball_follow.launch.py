@@ -88,17 +88,13 @@ def generate_launch_description():
     inhibit_detect_ball_node = Node(
             package='ball_follow',
             executable='inhibit_detect_ball',
-            # TODO: remapp the topic in follow ball 
-            #parameters=[params_file, {'use_sim_time': use_sim_time}],
-            # remappings=[('/topic_a','/detected_ball'), ('/topic_b','/TBD'), ('/topic_c', '/ball_info')], 
+            parameters=[params_file, {'use_sim_time': use_sim_time}]
          )
     
     inhibit_follow_ball_node = Node(
             package='ball_follow',
             executable='inhibit_follow_ball',
-
-            #parameters=[params_file, {'use_sim_time': use_sim_time}],
-            # remappings=[('/topic_a','/heading/ball_follow'), ('/topic_b','/TBD'), ('/topic_c', '/heading/ball_follow/inhibit')],
+            parameters=[params_file, {'use_sim_time': use_sim_time}]
 
          )
 

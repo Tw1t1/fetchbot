@@ -3,8 +3,8 @@
 
 import rclpy
 from rclpy.node import Node
-from geometry_msgs.msg import Twist
-from std_msgs.msg import Bool
+from geometry_msgs.msg import Twist # TODO modifie to Heading msg
+from std_msgs.msg import Bool # TODO modifie to TBD msg
 import time
 
 # worth too look:
@@ -13,15 +13,15 @@ import time
 class InhibitorNode(Node):
     
     def __init__(self):
-        super().__init__('inhibitor_node_ball_follow')
+        super().__init__('grab_ball_follow_ball_inhibitore')
         
         # Subscribe to topic_a and topic_b with specified message type
-        self.sub_a = self.create_subscription(Twist, '/cmd_vel', self.callback_a, 10)
-        self.sub_b = self.create_subscription(Bool, '/TBD', self.callback_b, 10)
+        self.sub_a = self.create_subscription(Twist, '/ball_follow', self.callback_a, 10) # TODO modifie to Heading msg
+        self.sub_b = self.create_subscription(Bool, '/TBD', self.callback_b, 10) # TODO modifie to TBD msg
 
 
         # creat a publishe topic 
-        self.pub_c = self.create_publisher(Twist, '/heading/ball_follow/inhibit', 10)
+        self.pub_c = self.create_publisher(Twist, 'grab_ball_follow_ball_inhibitore', 10) # TODO modifie to Heading msg
 
         # Flag to determine if publishing to c is inhibited
         self.inhibit_publish = False
