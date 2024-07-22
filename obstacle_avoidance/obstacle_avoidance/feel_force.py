@@ -61,9 +61,14 @@ class FeelForceNode(Node):
 def main(args=None):
     rclpy.init(args=args)
     feel_force_node = FeelForceNode()
-    rclpy.spin(feel_force_node)
-    feel_force_node.destroy_node()
-    rclpy.shutdown()
+    try:
+        rclpy.spin(feel_force_node)
+    except KeyboardInterrupt:
+        pass
+    finally:
+        if rclpy.ok():
+            feel_force_node.destroy_node()
+            rclpy.shutdown()
  
  
 if __name__ == "__main__":

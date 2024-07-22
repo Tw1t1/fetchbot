@@ -13,7 +13,7 @@ class RunAwayNode(Node):
             'force',
             self.force_callback,
             10)
-        self.publisher = self.create_publisher(Heading, '/heading/runaway', 10)
+        self.publisher = self.create_publisher(Heading, 'runaway', 10)
         self.min_force_threshold = 33  # Adjust as needed
         self.max_speed = 1.5  # Adjust as needed
         self.max_magnitude = 60  # Adjust as needed
@@ -31,8 +31,6 @@ class RunAwayNode(Node):
         distance = 1.0   # Set the distance to defualt 1
         # Move backwards if the force is in front of the robot
         distance = -distance if abs(force.direction) < math.pi/2 and self.max_magnitude < force.magnitude else distance
-        self.get_logger().info(f"close and infont: {abs(force.direction) < math.pi/2 and self.max_magnitude < force.magnitude}")
-        
         # Calculate the opposite direction angle
         opposite_angle = force.direction + math.pi if force.direction < 0 else force.direction - math.pi
         
@@ -44,9 +42,14 @@ class RunAwayNode(Node):
 def main(args=None):
     rclpy.init(args=args)
     runaway = RunAwayNode()
-    rclpy.spin(runaway)
-    runaway.destroy_node()
-    rclpy.shutdown()
+    try:
+        rclpy.spin(runaway)
+    except KeyboardInterrupt:
+        pass
+    finally:
+        if rclpy.ok():
+            runaway.destroy_node()
+            rclpy.shutdown()
 
 if __name__ == '__main__':
     main()
