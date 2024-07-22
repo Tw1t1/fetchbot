@@ -1,7 +1,7 @@
 <launch>
 
       <!-- parameters -->
-
+      
       <let name="urdf_path" 
             value="$(find-pkg-share fetchbot_description)/urdf/fetchbot.urdf.xacro" />
       <let name="rviz_config_path"
@@ -40,5 +40,13 @@
 
       <node pkg="controller_manager" exec="spawner" output="screen" 
           args="joint_broad" />
+
+      <!-- layer 0 - obstacle avoidance -->
+          
+      <node pkg="obstacle_avoidance" exec="feel_force" output="screen" />
+
+      <node pkg="obstacle_avoidance" exec="runaway" output="screen" />
+
+      <node pkg="obstacle_avoidance" exec="avoid_runaway_suppressor" output="screen" />
 
 </launch>
