@@ -42,9 +42,14 @@ class RunAwayNode(Node):
 def main(args=None):
     rclpy.init(args=args)
     runaway = RunAwayNode()
-    rclpy.spin(runaway)
-    runaway.destroy_node()
-    rclpy.shutdown()
+    try:
+        rclpy.spin(runaway)
+    except KeyboardInterrupt:
+        pass
+    finally:
+        if rclpy.ok():
+            runaway.destroy_node()
+            rclpy.shutdown()
 
 if __name__ == '__main__':
     main()
