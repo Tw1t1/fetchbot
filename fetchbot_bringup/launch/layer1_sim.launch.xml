@@ -55,7 +55,7 @@
 
       <node pkg="wander" exec="avoid" name="avoid" output="screen"/>
 
-      <node pkg="wander" exec="ball_deatection_wander_inhibitor" name="ball_deatection_wander_inhibitor" output="screen"/>
+      <node pkg="wander" exec="detect_ball_wander_inhibitor" name="detect_ball_wander_inhibitor" output="screen"/>
 
       <node pkg="wander" exec="follow_ball_wander_suppressor" name="follow_ball_wander_suppressor" output="screen"/>
 

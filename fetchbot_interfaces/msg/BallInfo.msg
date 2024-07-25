@@ -1,4 +1,4 @@
-# BallDetection message
+# detect_ball message
 # TODO add more fields as needed
 
 float32 pos_x

@@ -22,7 +22,7 @@ setup(
         'console_scripts': [
             'wander = wander.wander:main',
             'avoid = wander.avoid:main',
-            'ball_deatection_wander_inhibitor = wander.ball_deatection_wander_inhibitor:main',
+            'detect_ball_wander_inhibitor = wander.detect_ball_wander_inhibitor:main',
             'follow_ball_wander_suppressor = wander.follow_ball_wander_suppressor:main',
             'orient_home_wander_suppressor = wander.orient_home_wander_suppressor:main',
         ],
