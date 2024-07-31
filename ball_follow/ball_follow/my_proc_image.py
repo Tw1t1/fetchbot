@@ -6,7 +6,7 @@ import numpy as np
 import imutils
 
 
-def find_circles(image, tuning_params):
+def find_circles(image, tuning_params, tuning_mode):
     """
     Detect circles (balls) in the given image using color thresholding and contour analysis.
     
@@ -63,19 +63,21 @@ def find_circles(image, tuning_params):
 
     keypoints = [k for k in keypoints if k.size > size_min_px and k.size < size_max_px]
 
-    out_image = image.copy()
-    tuning_image = cv2.bitwise_and(image, image, mask=mask)
+    out_image = None
+    tuning_image = None
+    if tuning_mode:
+        out_image = image.copy()
+        tuning_image = cv2.bitwise_and(image, image, mask=mask)
 
-    line_color = (0,0,255)
+        line_color = (0,0,255)
+        # Set up main output image
+        out_image = cv2.drawKeypoints(out_image, keypoints, np.array([]), line_color, cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
+        out_image = draw_window2(out_image, search_window_px)
 
-    # Set up main output image
-    out_image = cv2.drawKeypoints(out_image, keypoints, np.array([]), line_color, cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
-    out_image = draw_window2(out_image, search_window_px)
 
-
-    # Set up tuning output image
-    tuning_image = cv2.drawKeypoints(tuning_image, keypoints, np.array([]), line_color, cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
-    tuning_image = draw_window2(tuning_image, search_window_px)
+        # Set up tuning output image
+        tuning_image = cv2.drawKeypoints(tuning_image, keypoints, np.array([]), line_color, cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
+        tuning_image = draw_window2(tuning_image, search_window_px)
  
     keypoints_normalised = [normalise_keypoint(working_image, k) for k in keypoints]
     
@@ -93,10 +95,10 @@ def apply_search_window(image, window_adim=[0.0, 0.0, 1.0, 1.0]):
     x_max_px    = int(cols*window_adim[2]/100)
     y_max_px    = int(rows*window_adim[3]/100)    
     
-    #--- Initialize the mask as a black image
+    # Initialize the mask as a black image
     mask = np.zeros(image.shape,np.uint8)
     
-    #--- Copy the pixels from the original image corresponding to the window
+    # Copy the pixels from the original image corresponding to the window
     mask[y_min_px:y_max_px,x_min_px:x_max_px] = image[y_min_px:y_max_px,x_min_px:x_max_px]   
     
     return (mask)
@@ -109,7 +111,7 @@ def draw_window2(image,              #- Input image
                 line=5,             
                ):
     
-    #-- Draw a rectangle from top left to bottom right corner
+    # Draw a rectangle from top left to bottom right corner
     return cv2.rectangle(image, (rect_px[0], rect_px[1]), (rect_px[2], rect_px[3]), color, line)
 
 

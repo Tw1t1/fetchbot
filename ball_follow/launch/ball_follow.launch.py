@@ -14,7 +14,7 @@ def generate_launch_description():
     params_file = LaunchConfiguration('params_file')
     params_file_dec = DeclareLaunchArgument(
         'params_file',
-        default_value=os.path.join(get_package_share_directory('ball_follow'),'config','ball_follow_params_example.yaml'),
+        default_value=os.path.join(get_package_share_directory('ball_follow'),'config','ball_follow_params_robot.yaml'),
         description='Full path to params file for all ball_follow nodes.')
 
     detect_only = LaunchConfiguration('detect_only')
@@ -80,21 +80,18 @@ def generate_launch_description():
             package='ball_follow',
             executable='follow_ball',
             parameters=[params_file, {'use_sim_time': use_sim_time}],
-            # remappings=[('/cmd_vel',cmd_vel_topic)],
-            remappings=[('/cmd_vel','/diff_cont/cmd_vel_unstamped')],
             condition=UnlessCondition(detect_only)
          )
 
     inhibit_detect_ball_node = Node(
             package='ball_follow',
-            executable='inhibit_detect_ball',
-            parameters=[params_file, {'use_sim_time': use_sim_time}]
+            executable='orient_home_ball_detection_inhibitore',
          )
     
     inhibit_follow_ball_node = Node(
             package='ball_follow',
-            executable='inhibit_follow_ball',
-            parameters=[params_file, {'use_sim_time': use_sim_time}]
+            executable='grab_ball_follow_ball_inhibitore',
+            remappings=[('/grab_ball_follow_ball_inhibitore','/diff_cont/cmd_vel_unstamped')],
 
          )
 

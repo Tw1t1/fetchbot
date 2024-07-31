@@ -28,3 +28,5 @@ follow_ball:
     search_angular_speed: 0.5
     max_size_thresh: 0.25 # [0,1] range, closer to 1 mean robt can get closer to the ball. original was 0.1. 
     filter_value: 0.9
+    search_rotations: 2
+

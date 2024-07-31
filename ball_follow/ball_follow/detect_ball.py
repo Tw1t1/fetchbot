@@ -52,7 +52,7 @@ class DetectBall(Node):
 
         self.bridge = CvBridge()
 
-        if(self.tuning_mode):
+        if self.tuning_mode:
             proc.create_tuning_window(self.tuning_params)
 
 
@@ -64,15 +64,15 @@ class DetectBall(Node):
             if (self.tuning_mode):
                 self.tuning_params = proc.get_tuning_params()
 
-            keypoints_norm, out_image, tuning_image = proc.find_circles(cv_image, self.tuning_params)
+            keypoints_norm, out_image, tuning_image = proc.find_circles(cv_image, self.tuning_params, self.tuning_mode)
+            if self.tuning_mode:
+                img_to_pub = self.bridge.cv2_to_imgmsg(out_image, "bgr8")
+                img_to_pub.header = data.header
+                self.image_out_pub.publish(img_to_pub)
 
-            img_to_pub = self.bridge.cv2_to_imgmsg(out_image, "bgr8")
-            img_to_pub.header = data.header
-            self.image_out_pub.publish(img_to_pub)
-
-            img_to_pub = self.bridge.cv2_to_imgmsg(tuning_image, "bgr8")
-            img_to_pub.header = data.header
-            self.image_tuning_pub.publish(img_to_pub)
+                img_to_pub = self.bridge.cv2_to_imgmsg(tuning_image, "bgr8")
+                img_to_pub.header = data.header
+                self.image_tuning_pub.publish(img_to_pub)
 
             point_out = Point()
 
@@ -82,30 +82,34 @@ class DetectBall(Node):
                 x = kp.pt[0]
                 y = kp.pt[1]
                 s = kp.size
-                temp = kp.response
-
-                self.get_logger().info(f"Pt {i}: ({x}, {y}),  {s}, {kp.response})")
+                
+                self.get_logger().debug(f"Pt {i}: ({x}, {y}),  {s}")
 
                 if (s > point_out.z):                    
                     point_out.x = x
                     point_out.y = y
                     point_out.z = s
-                    p = temp
+
             if (point_out.z > 0):
-                self.ball_pub.publish(point_out) 
+                self.ball_pub.publish(point_out)
+                self.get_logger().info(f"Ball detected: ({point_out.x}, {point_out.y}),  {point_out.z}")
         except CvBridgeError as e:
             self.get_logger().error(e)
             print(e)  
 
 
 def main(args=None):
-
+    """
+    Main function to initialize and run the node.
+    """
     rclpy.init(args=args)
-
     detect_ball = DetectBall()
     while rclpy.ok():
         rclpy.spin_once(detect_ball)
         proc.wait_on_gui()
     detect_ball.destroy_node()
     rclpy.shutdown()
+
+if __name__ == '__main__':
+    main()
 
