@@ -16,16 +16,15 @@ class ClawController(Node):
         self.position_pub = self.create_publisher(Float64, 'position', 10)
 
 
-        self.declare_paramter('in1_pin', 23)
-        self.declare_paramter('in2_pin', 24)
-        self.declare_paramter('enable_pin', 25)
+        self.declare_paramter('in1_pin', 21)
+        self.declare_paramter('in2_pin', 20)
+    
         self.declare_paramter('min_claw_value', 0.0)
         self.declare_paramter('max_claw_value', 5.0)
         
         # L298N pins numbers
         self.IN1 = self.get_parameter('in1_pin').get_parameter_value().integer_value
         self.IN2 = self.get_parameter('in2_pin').get_parameter_value().integer_value
-        self.EN = self.get_parameter('enable_pin').get_parameter_value().integer_value
 
         # Potentiometer limits
         self.MIN_VALUE = self.get_parameter('min_claw_value').get_parameter_value().double_value
@@ -37,7 +36,7 @@ class ClawController(Node):
         self.position_msg = Float64()
 
         # L298N motor driver setup
-        self.motor = L298N(en=self.EN, in1=self.IN1, in2=self.IN2) 
+        self.motor = L298N(en=None, in1=self.IN1, in2=self.IN2) 
 
         # ADC setup, using for read Potentiometer values 
         self.adc = ADCReader()
