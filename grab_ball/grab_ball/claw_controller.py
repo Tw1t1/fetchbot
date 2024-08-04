@@ -4,8 +4,8 @@ import rclpy
 from rclpy.node import Node
 from std_msgs.msg import String, Float64 # TODO modify custom_interfaces
 
-from hardware_librery import ADCReader
-from hardware_librery import L298N
+from hardware_librery.ADCReader import ADCReader
+from hardware_librery.L298N import L298N
 
 class ClawController(Node):
 
@@ -16,11 +16,11 @@ class ClawController(Node):
         self.position_pub = self.create_publisher(Float64, 'position', 10)
 
 
-        self.declare_paramter('in1_pin', 21)
-        self.declare_paramter('in2_pin', 20)
+        self.declare_parameter('in1_pin', 21)
+        self.declare_parameter('in2_pin', 20)
     
-        self.declare_paramter('min_claw_value', 0.0)
-        self.declare_paramter('max_claw_value', 5.0)
+        self.declare_parameter('min_claw_value', 0.0)
+        self.declare_parameter('max_claw_value', 5.0)
         
         # L298N pins numbers
         self.IN1 = self.get_parameter('in1_pin').get_parameter_value().integer_value

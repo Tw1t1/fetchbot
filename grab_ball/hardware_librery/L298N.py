@@ -19,6 +19,7 @@ class L298N:
         :param in2: Input 2 pin (IN2 or IN4)
         :param defaultDutyCycle: Default duty cycle (0-100)
         """
+        GPIO.setmode(GPIO.BCM)
         # self._validate_gpio_pins(en, in1, in2)
         
         self.en = en
@@ -104,9 +105,9 @@ class L298N:
         if self.en is not None:
             self.pwm.ChangeFrequency(frequency)
 
-    def __del__(self):
+    #def __del__(self):
         """
         Clean up GPIO on object deletion.
         """
-        self.stop()
-        GPIO.cleanup([self.in1, self.in2, self.en])
+        #self.stop()
+        #GPIO.cleanup([self.in1, self.in2, self.en])

@@ -3,7 +3,7 @@
 
 import cv2
 import numpy as np
-import imutils
+# import imutils
 
 
 def find_circles(image, tuning_params, tuning_mode):
@@ -41,11 +41,11 @@ def find_circles(image, tuning_params, tuning_mode):
     # Apply the search window
     working_image = apply_search_window(mask, search_window)
 
-    contours = cv2.findContours(working_image.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-    contours = imutils.grab_contours(contours)
+    contours, _ = cv2.findContours(working_image.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    # contours = imutils.grab_contours(contours)
 
     keypoints = []
-
+    print("HAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
     for c in contours:
         ((x, y), radius) = cv2.minEnclosingCircle(c)
         M = cv2.moments(c)

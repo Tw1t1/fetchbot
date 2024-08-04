@@ -59,7 +59,7 @@ class GrabBall(Node):
         ball_in_left_bottom = self.ball_info.x < 0 and self.ball_info.y > 0
         ball_in_right_bottom = self.ball_info.x > 0 and self.ball_info.y > 0
         
-        if (ball_in_left_bottom or ball_in_right_bottom) and self.ball_info.z > 0.2:
+        if (ball_in_left_bottom or ball_in_right_bottom) and self.ball_info.z > 0.65:
             if not self.position_unchanged:
                 self.start_closing_claw()
                 self.claw_state = 'closing'

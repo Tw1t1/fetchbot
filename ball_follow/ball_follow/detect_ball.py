@@ -12,8 +12,8 @@ class DetectBall(Node):
     def __init__(self):
         super().__init__('detect_ball')
 
-        self.get_logger().info('Looking for the ball...')
-        self.image_sub = self.create_subscription(Image,"/image_in",self.callback,rclpy.qos.QoSPresetProfiles.SENSOR_DATA.value)
+        # self.get_logger().info('Looking for the ball...')
+        self.image_sub = self.create_subscription(Image,"/camera_sensor/image_raw",self.callback,rclpy.qos.QoSPresetProfiles.SENSOR_DATA.value)
         self.image_out_pub = self.create_publisher(Image, "/image_out", 1)
         self.image_tuning_pub = self.create_publisher(Image, "/image_tuning", 1)
         self.ball_pub  = self.create_publisher(Point,"/detected_ball",1)
@@ -51,9 +51,7 @@ class DetectBall(Node):
         }
 
         self.bridge = CvBridge()
-
-        if self.tuning_mode:
-            proc.create_tuning_window(self.tuning_params)
+        self.get_logger().info("BALL DETECT NODE HAS BEEN STARTED")
 
 
     def callback(self,data):
@@ -94,19 +92,17 @@ class DetectBall(Node):
                 self.ball_pub.publish(point_out)
                 self.get_logger().info(f"Ball detected: ({point_out.x}, {point_out.y}),  {point_out.z}")
         except CvBridgeError as e:
-            self.get_logger().error(e)
+            self.get_logger().info(e)
             print(e)  
 
 
 def main(args=None):
     """
-    Main function to initialize and run the node.
+    Main function to initialize and run the node
     """
     rclpy.init(args=args)
     detect_ball = DetectBall()
-    while rclpy.ok():
-        rclpy.spin_once(detect_ball)
-        proc.wait_on_gui()
+    rclpy.spin(detect_ball)
     detect_ball.destroy_node()
     rclpy.shutdown()
 
