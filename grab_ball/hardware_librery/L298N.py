@@ -21,7 +21,6 @@ class L298N:
         """
         GPIO.setwarnings(False) 
         GPIO.setmode(GPIO.BCM)
-        # self._validate_gpio_pins(en, in1, in2)
         
         self.en = en
         self.in1 = in1
@@ -38,20 +37,6 @@ class L298N:
             GPIO.setup(self.en, GPIO.OUT)
             self.pwm = GPIO.PWM(self.en, PWM_FREQUENCY)
             self.pwm.start(self.dutyCycleValue)
-
-    # def _validate_gpio_pins(self, en, in1, in2):
-    #     """
-    #     Validate GPIO pin numbers.
-        
-    #     :param en: Enable pin
-    #     :param in1: Input 1 pin
-    #     :param in2: Input 2 pin
-    #     :raises ValueError: If pin numbers are invalid
-    #     """
-    #     valid_pins = set(range(2, 28))  # Raspberry Pi typically has GPIO pins 2-27
-    #     for pin in (en, in1, in2):
-    #         if pin is not None and pin not in valid_pins:
-    #             raise ValueError(f"Invalid GPIO pin number: {pin}")
 
     def forward(self):
         """
@@ -106,9 +91,3 @@ class L298N:
         if self.en is not None:
             self.pwm.ChangeFrequency(frequency)
 
-    #def __del__(self):
-        """
-        Clean up GPIO on object deletion.
-        """
-        #self.stop()
-        #GPIO.cleanup([self.in1, self.in2, self.en])

@@ -12,40 +12,29 @@ class ClawController(Node):
             super().__init__('claw_controller')
             self.get_logger().info('Initializing ClawController...')
 
-            self.init_subscriptions()
-            self.init_publishers()
-            self.init_parameters()
-            self.init_hardware()
-            self.init_timer()
+            self.claw_cmd_sub = self.create_subscription(String, 'claw_cmd', self.claw_cmd_callback, 10)
+            self.position_pub = self.create_publisher(Float64, 'position', 10)
 
-            self.get_logger().info('ClawController initialization complete.')
+            self.declare_parameter('in1_pin', 21)
+            self.declare_parameter('in2_pin', 20)
+            self.declare_parameter('min_claw_value', 0.0)
+            self.declare_parameter('max_claw_value', 5.0)
+
+            self.IN1 = self.get_parameter('in1_pin').get_parameter_value().integer_value
+            self.IN2 = self.get_parameter('in2_pin').get_parameter_value().integer_value
+            self.MIN_VALUE = self.get_parameter('min_claw_value').get_parameter_value().double_value
+            self.MAX_VALUE = self.get_parameter('max_claw_value').get_parameter_value().double_value
+
+            timer_period = 0.1  # seconds
+            self.timer = self.create_timer(timer_period, self.timer_position_pub)
+            self.position_msg = Float64()
+
+            self.init_hardware()
+            self.get_logger().info('claw_controller has been started!')
+
         except Exception as e:
             self.get_logger().error(f'Error in ClawController initialization: {str(e)}')
             raise
-
-    def init_subscriptions(self):
-        self.get_logger().info('Setting up subscriptions...')
-        self.claw_cmd_sub = self.create_subscription(String, 'claw_cmd', self.claw_cmd_callback, 10)
-        self.get_logger().info('Subscriptions set up successfully.')
-
-    def init_publishers(self):
-        self.get_logger().info('Setting up publishers...')
-        self.position_pub = self.create_publisher(Float64, 'position', 10)
-        self.get_logger().info('Publishers set up successfully.')
-
-    def init_parameters(self):
-        self.get_logger().info('Declaring and getting parameters...')
-        self.declare_parameter('in1_pin', 21)
-        self.declare_parameter('in2_pin', 20)
-        self.declare_parameter('min_claw_value', 0.0)
-        self.declare_parameter('max_claw_value', 5.0)
-
-        self.IN1 = self.get_parameter('in1_pin').get_parameter_value().integer_value
-        self.IN2 = self.get_parameter('in2_pin').get_parameter_value().integer_value
-        self.MIN_VALUE = self.get_parameter('min_claw_value').get_parameter_value().double_value
-        self.MAX_VALUE = self.get_parameter('max_claw_value').get_parameter_value().double_value
-
-        self.get_logger().info(f'Parameters set: IN1={self.IN1}, IN2={self.IN2}, MIN_VALUE={self.MIN_VALUE}, MAX_VALUE={self.MAX_VALUE}')
 
     def init_hardware(self):
         self.get_logger().info('Initializing hardware components...')
@@ -63,13 +52,6 @@ class ClawController(Node):
             self.get_logger().error(f'Error initializing ADC reader: {str(e)}')
             raise
 
-    def init_timer(self):
-        self.get_logger().info('Setting up timer...')
-        timer_period = 0.1  # seconds
-        self.timer = self.create_timer(timer_period, self.timer_position_pub)
-        self.position_msg = Float64()
-        self.get_logger().info('Timer set up successfully.')
-
     def timer_position_pub(self):
         try:
             self.position_msg.data = self.read_potentiometer()
@@ -84,10 +66,12 @@ class ClawController(Node):
                 self.move_claw(1)
             elif msg.data == 'close':
                 self.move_claw(-1)
+            elif msg.data == 'stop':
+                self.move_claw(0)
             else:
                 self.get_logger().warn(f'Received invalid claw command: {msg.data}')
             
-            self.get_logger().info(f'Processed claw command: {msg.data}')
+            self.get_logger().debug(f'Processed claw command: {msg.data}')
         except Exception as e:
             self.get_logger().error(f'Error in claw_cmd_callback: {str(e)}')
 
@@ -112,14 +96,14 @@ class ClawController(Node):
             self.get_logger().error(f'Error in move_claw: {str(e)}')
 
     def read_potentiometer(self):
+        
         try:
-            with self.adc:
-                voltage = self.adc.get_adc(0)
+            voltage = self.adc.get_adc(0)
             self.get_logger().debug(f'Read potentiometer value: {voltage}')
             return voltage
         except Exception as e:
             self.get_logger().error(f'Error in read_potentiometer: {str(e)}')
-            return 0.0
+            return -1
 
 def main(args=None):
     rclpy.init(args=args)
@@ -129,8 +113,7 @@ def main(args=None):
     except Exception as e:
         print(f'Error in main: {str(e)}')
     finally:
-        if 'claw_controller_node' in locals():
-            claw_controller_node.destroy_node()
+        claw_controller_node.destroy_node()
         rclpy.shutdown()
 
 if __name__ == '__main__':

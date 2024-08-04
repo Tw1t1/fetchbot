@@ -16,23 +16,15 @@ class ADCReader:
         :param spi_ch: SPI channel (default: 0)
         """
         # Enable SPI
-        self.spi = spidev.SpiDev()
-        self.spi.open(0, spi_ch)
+        self.spi = spidev.SpiDev(0, spi_ch)
         self.spi.max_speed_hz = 1200000
 
         signal.signal(signal.SIGINT, self.close)
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        self.close()
 
     def close(self, signal=None, frame=None):
         """
         Close the SPI connection and exit the program.
         """
-        self.spi.close()
         sys.exit(0)
 
     def get_adc(self, channel):
