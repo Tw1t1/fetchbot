@@ -19,6 +19,7 @@ class L298N:
         :param in2: Input 2 pin (IN2 or IN4)
         :param defaultDutyCycle: Default duty cycle (0-100)
         """
+        GPIO.setwarnings(False) 
         GPIO.setmode(GPIO.BCM)
         # self._validate_gpio_pins(en, in1, in2)
         

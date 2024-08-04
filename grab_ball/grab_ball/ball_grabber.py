@@ -26,53 +26,58 @@ class GrabBall(Node):
         self.previous_position = None
         self.unchanged_position_count = 0
         self.position_unchanged = False
-        self.position_change_threshold = 0.001  # Adjust this value based on your system's precision
+        self.position_change_threshold = 0.01  # Adjust this value based on your system's precision
         self.position_range_min = 2.0  # Minimum position to start tracking
         self.position_range_max = 3.0  # Maximum position to stop tracking
         
-        
+        self.get_logger().info(f'grab_ball has been start!')
+
 
     def position_callback(self, msg):
         
-        self.current_position = msg.data
+        try:
+            self.current_position = msg.data
 
-        if self.position_range_min <= self.current_position <= self.position_range_max:
-            if self.previous_position is not None:
-                if abs(self.current_position - self.previous_position) < self.position_change_threshold:
-                    self.unchanged_position_count += 1
-                    if self.unchanged_position_count >= 4:
-                        self.position_unchanged = True
-                else:
-                    self.unchanged_position_count = 0
-                    self.position_unchanged = False
-            self.previous_position = self.current_position
-        else:
-            # Reset tracking the position when outside the range
-            self.unchanged_position_count = 0
-            self.position_unchanged = False
-            self.previous_position = None
-
+            if self.position_range_min <= self.current_position <= self.position_range_max:
+                if self.previous_position is not None:
+                    if abs(self.current_position - self.previous_position) < self.position_change_threshold:
+                        self.unchanged_position_count += 1
+                        if self.unchanged_position_count >= 4:
+                            self.position_unchanged = True
+                    else:
+                        self.unchanged_position_count = 0
+                        self.position_unchanged = False
+                self.previous_position = self.current_position
+            else:
+                # Reset tracking the position when outside the range
+                self.unchanged_position_count = 0
+                self.position_unchanged = False
+                self.previous_position = None
+        except Exception as e:
+            self.get_logger().error(f'Error in position_callback: {str(e)}')
 
     def ball_info_callback(self, msg):
-        self.ball_info = msg
+        try:
+            self.ball_info = msg
 
-        ball_in_left_bottom = self.ball_info.x < 0 and self.ball_info.y > 0
-        ball_in_right_bottom = self.ball_info.x > 0 and self.ball_info.y > 0
-        
-        if (ball_in_left_bottom or ball_in_right_bottom) and self.ball_info.z > 0.65:
-            if not self.position_unchanged:
-                self.start_closing_claw()
-                self.claw_state = 'closing'
-                self.grab_process_state = 'closing'
+            ball_in_left_bottom = self.ball_info.x < 0 and self.ball_info.y > 0
+            ball_in_right_bottom = self.ball_info.x > 0 and self.ball_info.y > 0
+            
+            if (ball_in_left_bottom or ball_in_right_bottom) and self.ball_info.z > 0.65:
+                if not self.position_unchanged:
+                    self.start_closing_claw()
+                    self.claw_state = 'closing'
+                    self.grab_process_state = 'closing'
+                else:
+                    self.stop_claw()
+                    self.claw_state = 'stopped'
+                    self.grab_process_state = 'grabbed'
             else:
-                self.stop_claw()
-                self.claw_state = 'stopped'
-                self.grab_process_state = 'grabbed'
-        else:
-            self.open_claw()
-            self.claw_state = 'open'
-            self.grab_process_state = 'waiting'
-
+                self.open_claw()
+                self.claw_state = 'open'
+                self.grab_process_state = 'waiting'
+        except Exception as e:
+            self.get_logger().error(f'Error in ball_info_callback: {str(e)}')
 
     def start_closing_claw(self):
         claw_cmd = String()

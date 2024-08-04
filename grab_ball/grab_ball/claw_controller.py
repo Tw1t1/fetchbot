@@ -41,41 +41,58 @@ class ClawController(Node):
         # ADC setup, using for read Potentiometer values 
         self.adc = ADCReader()
 
+        self.get_logger().info(f'claw_controller has been start with :{self.adc}, {self.motor}')
+
     def timer_position_pub(self):
-        self.position_msg.data = self.read_potentiometer()
-        self.position_pub.publish(self.position_msg)
+        try: 
+            self.position_msg.data = self.read_potentiometer()
+            self.position_pub.publish(self.position_msg)
+            self.get_logger().info(f'claw position: {self.position_msg.data}')
+        except Exception as e:
+            self.get_logger().error(f'Error in timer_position_pub: {str(e)}')
 
 
     def claw_cmd_callback(self, msg):
-        
-        if msg.data == 'open':
-            self.move_claw(1)  # Move in positive direction
-        elif msg.data == 'close':
-            self.move_claw(-1)  # Move in negative direction
-        
-    def move_claw(self, direction):
-        current_position = self.read_potentiometer()
+        try:
+            if msg.data == 'open':
+                self.move_claw(1)  # Move in positive direction
+            elif msg.data == 'close':
+                self.move_claw(-1)  # Move in negative direction
+            
+            self.get_logger().info(f'claw command: {msg.data}')
+        except Exception as e:
+            self.get_logger().error(f'Error in claw_cmd_callback: {str(e)}')
 
-        if (direction > 0 and current_position < self.MAX_VALUE) or \
-           (direction < 0 and current_position > self.MIN_VALUE):
-            # Set motor direction and speed
-            if direction > 0:
-                self.motor.forward()
+    def move_claw(self, direction):
+
+        try:
+            current_position = self.read_potentiometer()
+
+            if (direction > 0 and current_position < self.MAX_VALUE) or \
+            (direction < 0 and current_position > self.MIN_VALUE):
+                # Set motor direction and speed
+                if direction > 0:
+                    self.motor.forward()
+                else:
+                    self.motor.backward()
+                self.motor.set_duty_cycle(50)  # 50% duty cycle
             else:
-                self.motor.backward()
-            self.motor.set_duty_cycle(50)  # 50% duty cycle
-        else:
-            # Stop motor if at limit or direction == 0
-            self.motor.stop()
+                # Stop motor if at limit or direction == 0
+                self.motor.stop()
+        except Exception as e:
+            self.get_logger().error(f'Error in move_claw: {str(e)}')
 
     def read_potentiometer(self):
         # Read ADC value from channel 0
-        with self.adc:  # Using the new context manager
-            voltage = self.adc.get_adc(0)
+        try:
+            with self.adc:  # Using the new context manager
+                voltage = self.adc.get_adc(0)
+        except Exception as e:
+            self.get_logger().error(f'Error in read_potentiometer: {str(e)}')
         return voltage
 
-    def __del__(self):
-        del self.motor  # This will clean up GPIO pins used by L298N
+    # def cleanup(self):
+    #     del self.motor  # This will clean up GPIO pins used by L298N
 
 def main(args=None):
     rclpy.init(args=args)
