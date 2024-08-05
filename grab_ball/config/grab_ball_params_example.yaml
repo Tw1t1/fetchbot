@@ -1,7 +1,9 @@
 claw_controller:
   ros__parameters:
-    in1_pin: 21 # this is the correct pin on our rpi
-    in2_pin: 20 # this is the correct pin on our rpi
+    # this is the correct pin on our rpi (BCM mode)
+    in1_pin: 21 
+    in2_pin: 20 
+    en_pin: 6 
     min_claw_value: 0.0 # 0V
     max_claw_value: 5.0 # 5V
 

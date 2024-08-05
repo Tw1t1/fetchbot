@@ -19,7 +19,8 @@ class L298N:
         :param in2: Input 2 pin (IN2 or IN4)
         :param defaultDutyCycle: Default duty cycle (0-100)
         """
-        # self._validate_gpio_pins(en, in1, in2)
+        GPIO.setwarnings(False) 
+        GPIO.setmode(GPIO.BCM)
         
         self.en = en
         self.in1 = in1
@@ -36,20 +37,6 @@ class L298N:
             GPIO.setup(self.en, GPIO.OUT)
             self.pwm = GPIO.PWM(self.en, PWM_FREQUENCY)
             self.pwm.start(self.dutyCycleValue)
-
-    # def _validate_gpio_pins(self, en, in1, in2):
-    #     """
-    #     Validate GPIO pin numbers.
-        
-    #     :param en: Enable pin
-    #     :param in1: Input 1 pin
-    #     :param in2: Input 2 pin
-    #     :raises ValueError: If pin numbers are invalid
-    #     """
-    #     valid_pins = set(range(2, 28))  # Raspberry Pi typically has GPIO pins 2-27
-    #     for pin in (en, in1, in2):
-    #         if pin is not None and pin not in valid_pins:
-    #             raise ValueError(f"Invalid GPIO pin number: {pin}")
 
     def forward(self):
         """
@@ -71,7 +58,7 @@ class L298N:
         GPIO.output(self.in1, GPIO.HIGH)
         GPIO.output(self.in2, GPIO.LOW)
     
-    def set_duty_cycle(self, dc=int):
+    def set_duty_cycle(self, dc=100):
         """
         Set the duty cycle for PWM.
 
@@ -104,9 +91,10 @@ class L298N:
         if self.en is not None:
             self.pwm.ChangeFrequency(frequency)
 
-    def __del__(self):
-        """
-        Clean up GPIO on object deletion.
-        """
+    def cleanup(self):
         self.stop()
-        GPIO.cleanup([self.in1, self.in2, self.en])
+        if self.en is not None:
+            GPIO.cleanup([self.en, self.in1, self.in2])
+        else:
+            GPIO.cleanup([self.in1, self.in2])
+
