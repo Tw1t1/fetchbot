@@ -100,12 +100,10 @@ class ClawController(Node):
                 else:
                     self.motor.backward()
                     self.get_logger().info('Moving claw backward (close claw)')
-            # else:
-            #    self.motor.stop()
-            
-            self.motor.stop()
-            self.get_logger().info('Claw movement stopped (at limit or no movement needed)')
-                #self.get_logger().debug('Claw movement stopped (at limit or no movement needed)')
+            else:
+               self.motor.stop()
+               self.get_logger().debug('Claw movement stopped (at limit or no movement needed)')
+        
         except Exception as e:
             self.get_logger().error(f'Error in move_claw: {str(e)}')
 
