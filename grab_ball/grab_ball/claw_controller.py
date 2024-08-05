@@ -44,6 +44,8 @@ class ClawController(Node):
         self.get_logger().info('Initializing hardware components...')
         try:
             self.motor = L298N(en=self.EN, in1=self.IN1, in2=self.IN2)
+            self.motor.set_duty_cycle(100)
+
             self.get_logger().info('L298N motor driver initialized successfully.')
         except Exception as e:
             self.get_logger().error(f'Error initializing L298N motor driver: {str(e)}')
@@ -83,24 +85,27 @@ class ClawController(Node):
         try:
             current_position = self.read_potentiometer()
             
-            self.get_logger().debug(f'Current position: {current_position}, Direction: {direction}')
+            self.get_logger().info(f'Current position: {current_position}, Direction: {direction}')
 
-            safe_motor_sensor = 0.5
+            motor_sensor_treshold = 0.5
             
-            if (direction > 0 and current_position > (self.MIN_VALUE + safe_motor_sensor)) or \
-               (direction < 0 and current_position < (self.MAX_VALUE - safe_motor_sensor)):
+            if (direction > 0 and current_position > (self.MIN_VALUE + motor_sensor_treshold)) or \
+               (direction < 0 and current_position < (self.MAX_VALUE - motor_sensor_treshold)):
                 
-                self.motor.set_duty_cycle(100)
-
+                self.get_logger().info(f'Current position: {current_position}, Direction: {direction}')
+                self.get_logger().info(f'current duty cycle: {self.motor.get_duty_cycle()}')
                 if direction > 0:
                     self.motor.forward()
                     self.get_logger().info('Moving claw forward (open claw)')
                 else:
                     self.motor.backward()
                     self.get_logger().info('Moving claw backward (close claw)')
-            else:
-                self.motor.stop()
-                self.get_logger().debug('Claw movement stopped (at limit or no movement needed)')
+            # else:
+            #    self.motor.stop()
+            
+            self.motor.stop()
+            self.get_logger().info('Claw movement stopped (at limit or no movement needed)')
+                #self.get_logger().debug('Claw movement stopped (at limit or no movement needed)')
         except Exception as e:
             self.get_logger().error(f'Error in move_claw: {str(e)}')
 

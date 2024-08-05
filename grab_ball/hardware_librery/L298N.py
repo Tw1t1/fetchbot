@@ -58,7 +58,7 @@ class L298N:
         GPIO.output(self.in1, GPIO.HIGH)
         GPIO.output(self.in2, GPIO.LOW)
     
-    def set_duty_cycle(self, dc=int):
+    def set_duty_cycle(self, dc=100):
         """
         Set the duty cycle for PWM.
 
