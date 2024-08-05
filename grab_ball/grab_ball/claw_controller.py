@@ -82,18 +82,22 @@ class ClawController(Node):
     def move_claw(self, direction):
         try:
             current_position = self.read_potentiometer()
+            
             self.get_logger().debug(f'Current position: {current_position}, Direction: {direction}')
 
             safe_motor_sensor = 0.5
+            
             if (direction > 0 and current_position < (self.MAX_VALUE - safe_motor_sensor)) or \
                (direction < 0 and current_position > (self.MIN_VALUE + safe_motor_sensor)):
+                
+                self.motor.set_duty_cycle(100)
+
                 if direction > 0:
                     self.motor.forward()
-                    self.get_logger().debug('Moving claw forward')
+                    self.get_logger().info('Moving claw forward (open claw)')
                 else:
                     self.motor.backward()
-                    self.get_logger().debug('Moving claw backward')
-                self.motor.set_duty_cycle(50)
+                    self.get_logger().info('Moving claw backward (close claw)')
             else:
                 self.motor.stop()
                 self.get_logger().debug('Claw movement stopped (at limit or no movement needed)')
