@@ -87,8 +87,8 @@ class ClawController(Node):
 
             safe_motor_sensor = 0.5
             
-            if (direction > 0 and current_position < (self.MAX_VALUE - safe_motor_sensor)) or \
-               (direction < 0 and current_position > (self.MIN_VALUE + safe_motor_sensor)):
+            if (direction > 0 and current_position > (self.MIN_VALUE + safe_motor_sensor)) or \
+               (direction < 0 and current_position < (self.MAX_VALUE - safe_motor_sensor)):
                 
                 self.motor.set_duty_cycle(100)
 
