@@ -91,3 +91,10 @@ class L298N:
         if self.en is not None:
             self.pwm.ChangeFrequency(frequency)
 
+    def cleanup(self):
+        self.stop()
+        if self.en is not None:
+            GPIO.cleanup([self.en, self.in1, self.in2])
+        else:
+            GPIO.cleanup([self.in1, self.in2])
+

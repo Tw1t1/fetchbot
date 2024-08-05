@@ -17,11 +17,14 @@ class ClawController(Node):
 
             self.declare_parameter('in1_pin', 21)
             self.declare_parameter('in2_pin', 20)
+            self.declare_parameter('en_pin', 6)
+
             self.declare_parameter('min_claw_value', 0.0)
             self.declare_parameter('max_claw_value', 5.0)
 
             self.IN1 = self.get_parameter('in1_pin').get_parameter_value().integer_value
             self.IN2 = self.get_parameter('in2_pin').get_parameter_value().integer_value
+            self.EN = self.get_parameter('en_pin').get_parameter_value().integer_value
             self.MIN_VALUE = self.get_parameter('min_claw_value').get_parameter_value().double_value
             self.MAX_VALUE = self.get_parameter('max_claw_value').get_parameter_value().double_value
 
@@ -32,6 +35,7 @@ class ClawController(Node):
             self.init_hardware()
             self.get_logger().info('claw_controller has been started!')
 
+
         except Exception as e:
             self.get_logger().error(f'Error in ClawController initialization: {str(e)}')
             raise
@@ -39,7 +43,7 @@ class ClawController(Node):
     def init_hardware(self):
         self.get_logger().info('Initializing hardware components...')
         try:
-            self.motor = L298N(en=None, in1=self.IN1, in2=self.IN2)
+            self.motor = L298N(en=self.EN, in1=self.IN1, in2=self.IN2)
             self.get_logger().info('L298N motor driver initialized successfully.')
         except Exception as e:
             self.get_logger().error(f'Error initializing L298N motor driver: {str(e)}')
@@ -80,8 +84,9 @@ class ClawController(Node):
             current_position = self.read_potentiometer()
             self.get_logger().debug(f'Current position: {current_position}, Direction: {direction}')
 
-            if (direction > 0 and current_position < self.MAX_VALUE) or \
-               (direction < 0 and current_position > self.MIN_VALUE):
+            safe_motor_sensor = 0.5
+            if (direction > 0 and current_position < (self.MAX_VALUE - safe_motor_sensor)) or \
+               (direction < 0 and current_position > (self.MIN_VALUE + safe_motor_sensor)):
                 if direction > 0:
                     self.motor.forward()
                     self.get_logger().debug('Moving claw forward')
@@ -104,6 +109,11 @@ class ClawController(Node):
         except Exception as e:
             self.get_logger().error(f'Error in read_potentiometer: {str(e)}')
             return -1
+    
+    def __del__(self):
+        self.get_logger().info('Node is being destroyed')
+        self.motor.cleanup()
+        self.get_logger().info("claw motor's GPIO cleaneup")
 
 def main(args=None):
     rclpy.init(args=args)

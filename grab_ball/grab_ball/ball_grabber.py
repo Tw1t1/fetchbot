@@ -30,7 +30,8 @@ class GrabBall(Node):
         self.position_range_min = 2.0  # Minimum position to start tracking
         self.position_range_max = 3.0  # Maximum position to stop tracking
         
-        self.get_logger().info(f'grab_ball has been start!')
+        self.get_logger().info('Waiting for ball to grab ... ')
+
 
 
     def position_callback(self, msg):
