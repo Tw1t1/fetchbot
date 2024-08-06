@@ -38,7 +38,7 @@ class LocomotionController(Node):
         self.get_logger().info(f'Wheel radius: {self.wheel_radius}m, Wheel separation: {self.wheel_separation}m')
 
 
-    def twist_callback(self, msg):
+    def twist_callback_b(self, msg):
         """
         Callback function for handling Twist messages.
         Converts linear and angular velocities to motor commands.
@@ -71,14 +71,14 @@ class LocomotionController(Node):
             self.get_logger().info(f'Directions: left={left_direction}, right={right_direction}')
 
             # Set motor directions and speeds
-            self.set_motor(self.left_motor, left_dc, left_direction, 'left')
-            self.set_motor(self.right_motor, right_dc, right_direction, 'right')
+            self.set_motor_b(self.left_motor, left_dc, left_direction, 'left')
+            self.set_motor_b(self.right_motor, right_dc, right_direction, 'right')
 
         except Exception as e:
             self.get_logger().error(f'Error in twist_callback: {str(e)}')
-
-        '''
-        this code is same the above , but not consider the wheel radius and wheel seperaion
+    def twist_callback(self, msg):
+        #this function is same the above , but not consider the wheel radius and wheel seperaion
+        
         # Cap values at [-1 .. 1]
         x = max(min(msg.linear.x, 1.0), -1.0)
         z = max(min(msg.angular.z, 1.0), -1.0)
@@ -94,9 +94,18 @@ class LocomotionController(Node):
         # Set motor directions and speeds
         self.set_motor(self.left_motor, left, left_dc)
         self.set_motor(self.right_motor, right, right_dc)
-        '''
+        
+    def set_motor(self, motor, value, duty_cycle):
+        motor.set_duty_cycle(duty_cycle)
+        if value > 0:
+            motor.forward()
+        elif value < 0:
+            motor.backward()
+        else:
+            motor.stop()
 
-    def set_motor(self, motor, duty_cycle, direction, motor_name):
+
+    def set_motor_b(self, motor, duty_cycle, direction, motor_name):
         """
         Set the speed and direction of a motor.
         
