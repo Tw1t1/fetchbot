@@ -48,13 +48,13 @@ class LocomotionController(Node):
             v = msg.linear.x
             w = msg.angular.z
 
-            self.get_logger().debug(f'Received Twist: linear={v}, angular={w}')
+            self.get_logger().info(f'Received Twist: linear={v}, angular={w}')
 
             # Calculate wheel velocities
             left_wheel_velocity = (v - (w * self.wheel_separation / 2)) / self.wheel_radius
             right_wheel_velocity = (v + (w * self.wheel_separation / 2)) / self.wheel_radius
 
-            self.get_logger().debug(f'Calculated wheel velocities: left={left_wheel_velocity}, right={right_wheel_velocity}')
+            self.get_logger().info(f'Calculated wheel velocities: left={left_wheel_velocity}, right={right_wheel_velocity}')
 
             # Convert to duty cycle (0 to 100) and direction
             max_wheel_velocity = max(abs(left_wheel_velocity), abs(right_wheel_velocity))
@@ -67,8 +67,8 @@ class LocomotionController(Node):
                 left_dc = right_dc = 0
                 left_direction = right_direction = 0
 
-            self.get_logger().debug(f'Converted to duty cycles: left={left_dc}, right={right_dc}')
-            self.get_logger().debug(f'Directions: left={left_direction}, right={right_direction}')
+            self.get_logger().info(f'Converted to duty cycles: left={left_dc}, right={right_dc}')
+            self.get_logger().info(f'Directions: left={left_direction}, right={right_direction}')
 
             # Set motor directions and speeds
             self.set_motor(self.left_motor, left_dc, left_direction, 'left')
@@ -100,8 +100,8 @@ class LocomotionController(Node):
         """
         Set the speed and direction of a motor.
         
-        WHEEL RADIUS, WHEEL SEPERARTION.
-        FIX NeGATIVE DUTY CYCLE.
+        ################# WHEEL RADIUS, WHEEL SEPERARTION. ################# 
+        ################# FIX NeGATIVE DUTY CYCLE. ######################### 
         
         :param motor: L298N motor object
         :param duty_cycle: Duty cycle (0 to 100)
@@ -109,29 +109,21 @@ class LocomotionController(Node):
         :param motor_name: Name of the motor (for logging)
         """
         try:
-            duty_cycle = max(0, min(int(duty_cycle), 100))  # Ensure duty cycle is between 0 and 100
+            min_duty_cycle = 30 # NEW
+            duty_cycle = max(min_duty_cycle, min(int(duty_cycle), 100))  # Ensure duty cycle is between 0 and 100
             motor.set_duty_cycle(duty_cycle)
             
             if direction > 0:
                 motor.forward()
-                self.get_logger().debug(f'{motor_name.capitalize()} motor moving forward at {duty_cycle}% duty cycle')
+                self.get_logger().info(f'{motor_name.capitalize()} motor moving forward at {duty_cycle}% duty cycle')
             elif direction < 0:
                 motor.backward()
-                self.get_logger().debug(f'{motor_name.capitalize()} motor moving backward at {duty_cycle}% duty cycle')
+                self.get_logger().info(f'{motor_name.capitalize()} motor moving backward at {duty_cycle}% duty cycle')
             else:
                 motor.stop()
-                self.get_logger().debug(f'{motor_name.capitalize()} motor stopped')
+                self.get_logger().info(f'{motor_name.capitalize()} motor stopped')
         except Exception as e:
             self.get_logger().error(f'Error setting {motor_name} motor: {str(e)}')
-
-    # def set_motor(self, motor, value, duty_cycle):
-    #     motor.set_duty_cycle(duty_cycle)
-    #     if value > 0:
-    #         motor.forward()
-    #     elif value < 0:
-    #         motor.backward()
-    #     else:
-    #         motor.stop()
 
     def stop(self):
         """Stop both motors."""
