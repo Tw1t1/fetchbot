@@ -16,8 +16,8 @@ class LocomotionController(Node):
         super().__init__('locomotion_controller')
 
         # Robot parameters
-        self.wheel_radius = 0.055  # meters
-        self.wheel_separation = 0.16  # meters
+        self.wheel_radius = 0.0525  # meters
+        self.wheel_separation = 0.22  # meters
 
         # L298N setup
         try:
@@ -37,7 +37,19 @@ class LocomotionController(Node):
         self.get_logger().info('Locomotion Controller has been started')
         self.get_logger().info(f'Wheel radius: {self.wheel_radius}m, Wheel separation: {self.wheel_separation}m')
 
+    def calculate_wheel_velocities(self, linear_velocity, angular_velocity):
+        """
+        Calculate the velocities of the left and right wheels based on
+        the desired linear and angular velocities of the robot.
+        """
+        v_linear = linear_velocity / self.wheel_radius
+        v_angular = self.wheel_separation * angular_velocity / (2 * self.wheel_radius)
 
+        left_wheel_velocity = v_linear - v_angular
+        right_wheel_velocity = v_linear + v_angular
+
+        return left_wheel_velocity, right_wheel_velocity
+    
     def twist_callback_b(self, msg):
         """
         Callback function for handling Twist messages.
@@ -53,6 +65,8 @@ class LocomotionController(Node):
             # Calculate wheel velocities
             left_wheel_velocity = (v - (w * self.wheel_separation / 2)) / self.wheel_radius
             right_wheel_velocity = (v + (w * self.wheel_separation / 2)) / self.wheel_radius
+            
+            # left_wheel_velocity, right_wheel_velocity = self.calculate_wheel_velocities(v, w)
 
             self.get_logger().info(f'Calculated wheel velocities: left={left_wheel_velocity}, right={right_wheel_velocity}')
 
@@ -118,8 +132,8 @@ class LocomotionController(Node):
         :param motor_name: Name of the motor (for logging)
         """
         try:
-            min_duty_cycle = 30 # NEW
-            duty_cycle = max(40, min(int(duty_cycle), 100))  # Ensure duty cycle is between 0 and 100
+            min_duty_cycle = 40 # NEW
+            duty_cycle = max(min_duty_cycle, min(int(duty_cycle), 100))  # Ensure duty cycle is between 0 and 100
             motor.set_duty_cycle(duty_cycle)
             
             if direction > 0:
