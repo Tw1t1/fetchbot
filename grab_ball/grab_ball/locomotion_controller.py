@@ -31,7 +31,7 @@ class LocomotionController(Node):
         self.subscription = self.create_subscription(
             Twist,
             'cmd_vel',
-            self.twist_callback,
+            self.twist_callback_b,
             10)
         
         self.get_logger().info('Locomotion Controller has been started')
@@ -119,7 +119,7 @@ class LocomotionController(Node):
         """
         try:
             min_duty_cycle = 30 # NEW
-            duty_cycle = max(min_duty_cycle, min(int(duty_cycle), 100))  # Ensure duty cycle is between 0 and 100
+            duty_cycle = max(40, min(int(duty_cycle), 100))  # Ensure duty cycle is between 0 and 100
             motor.set_duty_cycle(duty_cycle)
             
             if direction > 0:
