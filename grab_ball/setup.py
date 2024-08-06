@@ -21,6 +21,7 @@ setup(
     entry_points={
         'console_scripts': [
             'claw_controller = grab_ball.claw_controller:main',
+            'locomotion_controller = grab_ball.locomotion_controller:main',
             'grab_ball = grab_ball.ball_grabber:main',
         ],
     },
