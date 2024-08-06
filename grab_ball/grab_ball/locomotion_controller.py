@@ -87,17 +87,17 @@ class LocomotionController(Node):
             self.get_logger().info(f'Calculated wheel velocities: left={left_wheel_velocity}, right={right_wheel_velocity}')
 
             # Convert to duty cycle (0 to 100) and direction
-            max_wheel_velocity = max(abs(left_wheel_velocity), abs(right_wheel_velocity))
-
-            left_dc = abs(left_wheel_velocity / max_wheel_velocity) * 100
-            right_dc = abs(right_wheel_velocity / max_wheel_velocity) * 100
-            
-            # Apply minimum duty cycle
-            left_dc = max(left_dc, self.min_duty_cycle) if left_dc > 0 else 0
-            right_dc = max(right_dc, self.min_duty_cycle) if right_dc > 0 else 0
-            
-            left_direction = 1 if left_wheel_velocity >= 0 else -1
-            right_direction = 1 if right_wheel_velocity >= 0 else -1
+            max_wheel_velocity = max(abs(left_wheel_velocity), abs(right_wheel_velocity)) 
+            if max_wheel_velocity > 0:
+                left_dc = abs(left_wheel_velocity / max_wheel_velocity) * 100
+                right_dc = abs(right_wheel_velocity / max_wheel_velocity) * 100
+                
+                # Apply minimum duty cycle
+                left_dc = max(left_dc, self.min_duty_cycle) if left_dc > 0 else 0
+                right_dc = max(right_dc, self.min_duty_cycle) if right_dc > 0 else 0
+                
+                left_direction = 1 if left_wheel_velocity >= 0 else -1
+                right_direction = 1 if right_wheel_velocity >= 0 else -1
         
             self.get_logger().info(f'Converted to duty cycles: left={left_dc}, right={right_dc}')
             self.get_logger().info(f'Directions: left={left_direction}, right={right_direction}')
