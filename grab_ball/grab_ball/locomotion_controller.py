@@ -81,6 +81,24 @@ class LocomotionController(Node):
             self.get_logger().info(f'Adjusted for sharp turn: left={left_velocity}, right={right_velocity}')
         return left_velocity, right_velocity
 
+    def apply_velocity(self, target_velocity, current_velocity):
+        """
+        Apply velocity changes with acceleration limits and improved duty cycle calculation.
+        """
+        new_velocity = self.ramp_to_target(current_velocity, target_velocity, self.max_acceleration)
+        duty_cycle = self.velocity_to_duty_cycle(new_velocity)
+        self.get_logger().info(f'Applied velocity: target={target_velocity}, new={new_velocity}, duty_cycle={duty_cycle}')
+        return duty_cycle, new_velocity
+
+    def ramp_to_target(self, current, target, max_change):
+        """
+        Gradually change the current value towards the target value.
+        """
+        diff = target - current
+        if abs(diff) > max_change:
+            return current + math.copysign(max_change, diff)
+        return target
+
     def velocity_to_duty_cycle(self, velocity):
         """
         Convert wheel velocity to duty cycle with improved scaling.
@@ -100,32 +118,6 @@ class LocomotionController(Node):
         duty_cycle = max(0, min(int(duty_cycle), self.max_duty_cycle))
         self.get_logger().debug(f'Velocity: {velocity}, Ratio: {velocity_ratio}, Calculated duty cycle: {duty_cycle}')
         return duty_cycle
-
-    def ramp_to_target(self, current, target, max_change):
-        """
-        Gradually change the current value towards the target value.
-        """
-        diff = target - current
-        if abs(diff) > max_change:
-            return current + math.copysign(max_change, diff)
-        return target
-
-    def velocity_to_duty_cycle(self, velocity):
-        """
-        Convert wheel velocity to duty cycle with improved scaling.
-        """
-        abs_velocity = abs(velocity)
-        if abs_velocity == 0:
-            return 0
-        
-        velocity_ratio = abs_velocity / self.max_wheel_velocity
-        
-        if velocity_ratio > 0:
-            duty_cycle = self.min_duty_cycle + (self.max_duty_cycle - self.min_duty_cycle) * velocity_ratio
-        else:
-            duty_cycle = 0
-        
-        return max(0, min(int(duty_cycle), self.max_duty_cycle))
 
     def twist_callback(self, msg):
         """
