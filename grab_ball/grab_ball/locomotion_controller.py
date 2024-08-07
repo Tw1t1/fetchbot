@@ -21,14 +21,18 @@ class LocomotionController(Node):
         self.wheel_radius = 0.0525  # meters
         self.wheel_separation = 0.22  # meters
         self.min_duty_cycle = 20  # Minimum duty cycle to ensure motor response
+        self.max_duty_cycle = 100  # Maximum duty cycle
 
         # Maximum linear and angular velocities
         self.max_linear_velocity = 1.0  # m/s
         self.max_angular_velocity = 2.0  # rad/s
 
+        # Calculate max wheel velocity
+        self.max_wheel_velocity = (self.max_linear_velocity + (self.max_angular_velocity * self.wheel_separation / 2)) / self.wheel_radius
+
         # Kinematic model correction factors
         self.K1 = 1.0  # General correction factor, can be calibrated
-        self.K2 = 1.0  # Rotation correction factor, can be calibrated
+        self.K2 = 1.1  # Rotation correction factor, can be calibrated
 
         # Smoothing parameters
         self.max_acceleration = 0.5  # m/s^2, can be adjusted
@@ -52,80 +56,21 @@ class LocomotionController(Node):
         
         self.get_logger().info('Enhanced Locomotion Controller has been started')
         self.get_logger().info(f'Wheel radius: {self.wheel_radius}m, Wheel separation: {self.wheel_separation}m')
+        self.get_logger().info(f'Max wheel velocity: {self.max_wheel_velocity} rad/s')
+        self.get_logger().info(f'Correction factors: K1={self.K1}, K2={self.K2}')
 
     def calculate_wheel_velocities(self, v, w):
         """
         Calculate wheel velocities using an enhanced kinematic model.
-        
-        This function applies correction factors K1 and K2 to improve the accuracy
-        of the wheel velocity calculations, especially for turns.
-        
-        :param v: Linear velocity of the robot (m/s)
-        :param w: Angular velocity of the robot (rad/s)
-        :return: Tuple of (left_wheel_velocity, right_wheel_velocity)
         """
         left_velocity = self.K1 * (v - self.K2 * (w * self.wheel_separation / 2)) / self.wheel_radius
         right_velocity = self.K1 * (v + self.K2 * (w * self.wheel_separation / 2)) / self.wheel_radius
+        self.get_logger().info(f'Raw wheel velocities: left={left_velocity}, right={right_velocity}')
         return left_velocity, right_velocity
-
-    def nonlinear_map(self, velocity):
-        """
-        Apply a nonlinear mapping to the velocity.
-        
-        This function can help compensate for non-linear motor responses.
-        The current implementation uses a quadratic mapping, but this can be
-        adjusted based on the specific behavior of your motors.
-        
-        :param velocity: Input velocity
-        :return: Mapped velocity
-        """
-        max_velocity = self.max_linear_velocity / self.wheel_radius
-        return math.copysign(velocity**2, velocity) * 100 / (max_velocity**2)
-
-    def apply_velocity(self, target_velocity, current_velocity):
-        """
-        Apply velocity changes with acceleration limits and static friction compensation.
-        
-        This function implements smooth acceleration and deceleration, and
-        compensates for static friction by ensuring a minimum duty cycle.
-        
-        :param target_velocity: Desired velocity
-        :param current_velocity: Current velocity
-        :return: Tuple of (duty_cycle, new_velocity)
-        """
-        new_velocity = self.ramp_to_target(current_velocity, target_velocity, self.max_acceleration)
-        duty_cycle = self.nonlinear_map(new_velocity)
-        if abs(new_velocity) > 0:
-            duty_cycle = max(self.min_duty_cycle, abs(duty_cycle))
-        return duty_cycle, new_velocity
-
-    def ramp_to_target(self, current, target, max_change):
-        """
-        Gradually change the current value towards the target value.
-        
-        This function ensures smooth transitions in velocity, improving
-        the overall motion of the robot.
-        
-        :param current: Current value
-        :param target: Target value
-        :param max_change: Maximum allowed change
-        :return: New value after applying the ramp
-        """
-        diff = target - current
-        if abs(diff) > max_change:
-            return current + math.copysign(max_change, diff)
-        return target
 
     def adjust_for_sharp_turn(self, left_velocity, right_velocity):
         """
         Adjust wheel velocities for sharp turns.
-        
-        This function implements a simple strategy for sharp turns by reversing
-        one of the wheels if the difference in velocities is above a threshold.
-        
-        :param left_velocity: Velocity of the left wheel
-        :param right_velocity: Velocity of the right wheel
-        :return: Tuple of adjusted (left_velocity, right_velocity)
         """
         turn_threshold = 0.5  # This value can be calibrated
         if abs(left_velocity - right_velocity) > turn_threshold:
@@ -133,43 +78,79 @@ class LocomotionController(Node):
                 right_velocity = -right_velocity / 2
             else:
                 left_velocity = -left_velocity / 2
+            self.get_logger().info(f'Adjusted for sharp turn: left={left_velocity}, right={right_velocity}')
         return left_velocity, right_velocity
+
+    def velocity_to_duty_cycle(self, velocity):
+        """
+        Convert wheel velocity to duty cycle with improved scaling.
+        """
+        abs_velocity = abs(velocity)
+        if abs_velocity == 0:
+            self.get_logger().debug(f'Zero velocity, duty cycle set to 0')
+            return 0
+        
+        velocity_ratio = abs_velocity / self.max_wheel_velocity
+        
+        if velocity_ratio > 0:
+            duty_cycle = self.min_duty_cycle + (self.max_duty_cycle - self.min_duty_cycle) * velocity_ratio
+        else:
+            duty_cycle = 0
+        
+        duty_cycle = max(0, min(int(duty_cycle), self.max_duty_cycle))
+        self.get_logger().debug(f'Velocity: {velocity}, Ratio: {velocity_ratio}, Calculated duty cycle: {duty_cycle}')
+        return duty_cycle
+
+    def ramp_to_target(self, current, target, max_change):
+        """
+        Gradually change the current value towards the target value.
+        """
+        diff = target - current
+        if abs(diff) > max_change:
+            return current + math.copysign(max_change, diff)
+        return target
+
+    def velocity_to_duty_cycle(self, velocity):
+        """
+        Convert wheel velocity to duty cycle with improved scaling.
+        """
+        abs_velocity = abs(velocity)
+        if abs_velocity == 0:
+            return 0
+        
+        velocity_ratio = abs_velocity / self.max_wheel_velocity
+        
+        if velocity_ratio > 0:
+            duty_cycle = self.min_duty_cycle + (self.max_duty_cycle - self.min_duty_cycle) * velocity_ratio
+        else:
+            duty_cycle = 0
+        
+        return max(0, min(int(duty_cycle), self.max_duty_cycle))
 
     def twist_callback(self, msg):
         """
         Callback function for handling Twist messages.
-        
-        This function processes incoming velocity commands and converts them
-        to appropriate motor controls, applying various enhancements for
-        improved robot motion.
         """
         try:
-            # Normalize velocities
             v = self.normalize_velocity(msg.linear.x, self.max_linear_velocity)
             w = self.normalize_velocity(msg.angular.z, self.max_angular_velocity)
 
             self.get_logger().info(f'Received Twist: linear={v}, angular={w}')
 
-            # Calculate wheel velocities
             left_velocity, right_velocity = self.calculate_wheel_velocities(v, w)
-            
-            # Adjust for sharp turns if necessary
             left_velocity, right_velocity = self.adjust_for_sharp_turn(left_velocity, right_velocity)
 
             self.get_logger().info(f'Calculated wheel velocities: left={left_velocity}, right={right_velocity}')
 
-            # Apply velocity changes with smoothing and convert to duty cycles
             left_dc, self.current_left_velocity = self.apply_velocity(left_velocity, self.current_left_velocity)
             right_dc, self.current_right_velocity = self.apply_velocity(right_velocity, self.current_right_velocity)
 
-            # Determine directions
             left_direction = 1 if self.current_left_velocity >= 0 else -1
             right_direction = 1 if self.current_right_velocity >= 0 else -1
 
-            self.get_logger().info(f'Converted to duty cycles: left={left_dc}, right={right_dc}')
-            self.get_logger().info(f'Directions: left={left_direction}, right={right_direction}')
+            self.get_logger().info(f'Final duty cycles: left={left_dc}, right={right_dc}')
+            self.get_logger().info(f'Final directions: left={left_direction}, right={right_direction}')
 
-            # Set motor directions and speeds
             self.set_motor(self.left_motor, left_dc, left_direction, 'left')
             self.set_motor(self.right_motor, right_dc, right_direction, 'right')
 
@@ -179,24 +160,15 @@ class LocomotionController(Node):
     def normalize_velocity(self, velocity, max_velocity):
         """
         Normalize the input velocity to ensure it's within the allowed range.
-        
-        :param velocity: Input velocity
-        :param max_velocity: Maximum allowed velocity
-        :return: Normalized velocity
         """
         return max(min(velocity, max_velocity), -max_velocity)
 
     def set_motor(self, motor, duty_cycle, direction, motor_name):
         """
         Set the speed and direction of a motor.
-        
-        :param motor: L298N motor object
-        :param duty_cycle: Duty cycle (0 to 100)
-        :param direction: Direction of rotation (1 for forward, -1 for backward)
-        :param motor_name: Name of the motor (for logging)
         """
         try:
-            duty_cycle = max(0, min(int(abs(duty_cycle)), 100))  # Ensure duty cycle is between 0 and 100
+            duty_cycle = max(0, min(int(duty_cycle), 100))  # Ensure duty cycle is between 0 and 100
             motor.set_duty_cycle(duty_cycle)
             
             if direction > 0:
