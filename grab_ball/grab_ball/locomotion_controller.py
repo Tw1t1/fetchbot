@@ -95,9 +95,8 @@ class LocomotionController(Node):
         Gradually change the current value towards the target value.
         """
         diff = target - current
-        if abs(diff) > max_change:
-            return current + math.copysign(max_change, diff)
-        return target
+        change = max(min(diff, max_change), -max_change)
+        return current + change
 
     def velocity_to_duty_cycle(self, velocity):
         """
@@ -110,12 +109,9 @@ class LocomotionController(Node):
         
         velocity_ratio = abs_velocity / self.max_wheel_velocity
         
-        if velocity_ratio > 0:
-            duty_cycle = self.min_duty_cycle + (self.max_duty_cycle - self.min_duty_cycle) * velocity_ratio
-        else:
-            duty_cycle = 0
+        duty_cycle = self.min_duty_cycle + (self.max_duty_cycle - self.min_duty_cycle) * velocity_ratio
+        duty_cycle = max(self.min_duty_cycle, min(int(duty_cycle), self.max_duty_cycle))
         
-        duty_cycle = max(0, min(int(duty_cycle), self.max_duty_cycle))
         self.get_logger().debug(f'Velocity: {velocity}, Ratio: {velocity_ratio}, Calculated duty cycle: {duty_cycle}')
         return duty_cycle
 
