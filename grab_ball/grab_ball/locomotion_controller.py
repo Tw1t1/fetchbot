@@ -2,6 +2,7 @@ import rclpy
 from rclpy.node import Node
 from geometry_msgs.msg import Twist
 from hardware_librery.L298N import L298N
+import time
 
 class LocomotionController(Node):
 
@@ -35,7 +36,7 @@ class LocomotionController(Node):
             self.twist_callback,
             10)
         
-        self.timer = self.create_timer(0.1, self.motor_command_timer)
+        self.timer = self.create_timer(0.02, self.motor_command_timer)
 
         self.get_logger().info('Locomotion Controller has been started')
 
@@ -52,6 +53,7 @@ class LocomotionController(Node):
             if self.linear_velocity != 0 and self.angular_velocity != 0:
                 if self.use_linear_velocity:
                     self.set_velocity(self.linear_velocity, 0)
+                    time.sleep(0.02)
                 else:
                     self.set_velocity(0, self.angular_velocity)
                 
@@ -86,7 +88,7 @@ class LocomotionController(Node):
         try:
             if abs(velocity) <= 1e-6:  # Stop condition
                 motor.stop()
-                self.get_logger().info(f'{motor_name.capitalize()} motor stopped')
+                self.get_logger().debug(f'{motor_name.capitalize()} motor stopped')
             else:
                 motor.set_duty_cycle(duty_cycle)
                 if velocity > 0: # Direction check by velocity sign
