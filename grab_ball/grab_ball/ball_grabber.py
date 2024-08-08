@@ -26,10 +26,13 @@ class GrabBall(Node):
         self.previous_position = None
         self.unchanged_position_count = 0
         self.position_unchanged = False
-        self.position_change_threshold = 0.01  # Adjust this value based on your system's precision
+        self.position_change_threshold = 0.1  # Adjust this value based on your system's precision
         self.position_range_min = 2.0  # Minimum position to start tracking
         self.position_range_max = 3.0  # Maximum position to stop tracking
         
+
+        self.claw_cmd = String()
+
         self.get_logger().info('Waiting for ball to grab ... ')
 
 
@@ -37,10 +40,19 @@ class GrabBall(Node):
     def position_callback(self, msg):
         
         try:
+            
+
             self.current_position = msg.data
 
-            if self.position_range_min <= self.current_position <= self.position_range_max:
+            if self.grab_process_state == 'waiting' and self.current_position > 0.5:
+                self.open_claw()
+            
+            ball_in_grabe_position_range = self.position_range_min <= self.current_position <= self.position_range_max
+            
+            if ball_in_grabe_position_range and self.grab_process_state == 'closing':
                 if self.previous_position is not None:
+                    self.current_position = round(self.current_position, 2)
+
                     if abs(self.current_position - self.previous_position) < self.position_change_threshold:
                         self.unchanged_position_count += 1
                         if self.unchanged_position_count >= 4:
@@ -64,9 +76,17 @@ class GrabBall(Node):
             ball_in_left_bottom = self.ball_info.x < 0 and self.ball_info.y > 0
             ball_in_right_bottom = self.ball_info.x > 0 and self.ball_info.y > 0
             
+            # ball_size_range = 0.65 < self.ball_info.z < 0.8
             if (ball_in_left_bottom or ball_in_right_bottom) and self.ball_info.z > 0.65:
+                self.get_logger().info(f'Ball to grab: pos ({round(self.ball_info.x, 5)}, {round(self.ball_info.y, 5)}) , size {round(self.ball_info.z, 5)}')
+
+                grab_status = String()
+                grab_status.data = self.grab_process_state
+                self.grab_ball_status_pub.publish(grab_status)
+
                 if not self.position_unchanged:
-                    self.start_closing_claw()
+
+                    self.close_claw()
                     self.claw_state = 'closing'
                     self.grab_process_state = 'closing'
                 else:
@@ -77,26 +97,25 @@ class GrabBall(Node):
                 self.open_claw()
                 self.claw_state = 'open'
                 self.grab_process_state = 'waiting'
+
+            self.get_logger().info(f'grab ball process state {self.grab_process_state}, claw state {self.claw_state}')
+
         except Exception as e:
             self.get_logger().error(f'Error in ball_info_callback: {str(e)}')
 
-    def start_closing_claw(self):
-        claw_cmd = String()
-        claw_cmd.data = 'close'
-        self.claw_cmd_pub.publish(claw_cmd)
+    def close_claw(self):
+        self.claw_cmd.data = 'close'
+        self.claw_cmd_pub.publish(self.claw_cmd)
 
 
     def stop_claw(self):
-        claw_cmd = String()
-        claw_cmd.data = 'stop'
-        self.claw_cmd_pub.publish(claw_cmd)
+        self.claw_cmd.data = 'stop'
+        self.claw_cmd_pub.publish(self.claw_cmd)
 
 
     def open_claw(self):
-        claw_cmd = String()
-        claw_cmd.data = 'open'
-        self.claw_cmd_pub.publish(claw_cmd)
-
+        self.claw_cmd.data = 'open'
+        self.claw_cmd_pub.publish(self.claw_cmd)
 
     def publish_status(self):
         status = String()

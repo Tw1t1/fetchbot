@@ -95,9 +95,11 @@ class ClawController(Node):
                 self.get_logger().info(f'Current position: {current_position}, Direction: {direction}')
                 self.get_logger().info(f'current duty cycle: {self.motor.get_duty_cycle()}')
                 if direction > 0:
+                    self.motor.set_duty_cycle(100)
                     self.motor.forward()
                     self.get_logger().info('Moving claw forward (open claw)')
                 else:
+                    self.motor.set_duty_cycle(75)
                     self.motor.backward()
                     self.get_logger().info('Moving claw backward (close claw)')
             else:
