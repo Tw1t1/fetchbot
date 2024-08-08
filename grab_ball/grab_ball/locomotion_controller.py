@@ -54,7 +54,7 @@ class LocomotionController(Node):
             # Extract linear and angular velocities
             # Normalize velocities
             v = msg.linear.x
-            w = msg.linear.z
+            w = msg.angular.z
 
             self.get_logger().info(f'Received Twist: linear={v}, angular={w}')
 
