@@ -135,7 +135,7 @@ class LocomotionController(Node):
             if direction > 0: 
                 motor.forward()
                 direction = "forward"
-            elif direction:
+            elif direction < 0:
                 motor.backward()
                 direction = "backward"
             else:
@@ -149,7 +149,7 @@ class LocomotionController(Node):
     def cleanup(self):
         """Cleanup function to stop motors and release GPIO pins."""
         try:
-            self.set_velocity(0, 0)  # Stop both motors
+            
             self.left_motor.cleanup()
             self.right_motor.cleanup()
             self.get_logger().info('Cleanup completed')
