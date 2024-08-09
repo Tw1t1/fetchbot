@@ -2,6 +2,21 @@ import rclpy
 from rclpy.node import Node
 from std_msgs.msg import String, Float64
 from geometry_msgs.msg import Point
+from enum import Enum
+
+
+class GrabBallStatus(Enum):
+    WAITING = 0
+    CLOSING = 1
+    OPENING = 2
+    GRABBED = 3 
+
+
+class BallSizeStatus(Enum):
+    NORMAL = 0
+    SUSPICIOUS = 1
+    INVALID = 2
+
 
 class GrabBall(Node):
     def __init__(self):
@@ -12,36 +27,34 @@ class GrabBall(Node):
         self.grab_ball_status_pub = self.create_publisher(String, 'grab_ball/status', 10)
         self.claw_cmd_pub = self.create_publisher(String, 'claw_cmd', 10)
         
-        # Timer to publish grab ball staus
         timer_period = 0.1  # seconds
         self.timer = self.create_timer(timer_period, self.publish_status)
 
-        
         self.ball_info = None
         self.claw_state = 'open'
-        self.grab_process_state = 'waiting'
+        self.grab_process_state = GrabBallStatus.WAITING
 
         # Variables for position change detection
         self.current_position = None
         self.previous_position = None
         self.unchanged_position_count = 0
         self.position_unchanged = False
-        self.position_change_threshold = 0.1  # Adjust this value based on your system's precision
-        self.position_range_min = 2.0  # Minimum position to start tracking
-        self.position_range_max = 3.0  # Maximum position to stop tracking
+        self.position_change_threshold = 0.1
+        self.position_range_min = 2.0
+        self.position_range_max = 3.0
         
+        # New variables for ball size analysis
+        self.ball_size_normal_min = 0.5
+        self.ball_size_normal_max = 0.9
+        self.ball_size_threshold_min = 0.4
+        self.ball_size_threshold_max = 0.95
 
         self.claw_cmd = String()
 
         self.get_logger().info('Waiting for ball to grab ... ')
 
-
-
     def position_callback(self, msg):
-        
         try:
-            
-
             self.current_position = msg.data
 
             if self.grab_process_state == 'waiting' and self.current_position > 0.5:
@@ -49,7 +62,7 @@ class GrabBall(Node):
             
             ball_in_grabe_position_range = self.position_range_min <= self.current_position <= self.position_range_max
             
-            if ball_in_grabe_position_range and self.grab_process_state == 'closing':
+            if ball_in_grabe_position_range and self.grab_process_state == GrabBallStatus.CLOSING:
                 if self.previous_position is not None:
                     self.current_position = round(self.current_position, 2)
 
@@ -62,7 +75,6 @@ class GrabBall(Node):
                         self.position_unchanged = False
                 self.previous_position = self.current_position
             else:
-                # Reset tracking the position when outside the range
                 self.unchanged_position_count = 0
                 self.position_unchanged = False
                 self.previous_position = None
@@ -76,8 +88,9 @@ class GrabBall(Node):
             ball_in_left_bottom = self.ball_info.x < 0 and self.ball_info.y > 0
             ball_in_right_bottom = self.ball_info.x > 0 and self.ball_info.y > 0
             
-            # ball_size_range = 0.65 < self.ball_info.z < 0.8
-            if (ball_in_left_bottom or ball_in_right_bottom) and self.ball_info.z > 0.65:
+            ball_size_status = self.check_ball_size(self.ball_info.z)
+            
+            if (ball_in_left_bottom or ball_in_right_bottom) and ball_size_status != BallSizeStatus.INVALID:
                 self.get_logger().info(f'Ball to grab: pos ({round(self.ball_info.x, 5)}, {round(self.ball_info.y, 5)}) , size {round(self.ball_info.z, 5)}')
 
                 grab_status = String()
@@ -85,33 +98,40 @@ class GrabBall(Node):
                 self.grab_ball_status_pub.publish(grab_status)
 
                 if not self.position_unchanged:
-
                     self.close_claw()
                     self.claw_state = 'closing'
-                    self.grab_process_state = 'closing'
+                    self.grab_process_state = GrabBallStatus.CLOSING
                 else:
                     self.stop_claw()
                     self.claw_state = 'stopped'
-                    self.grab_process_state = 'grabbed'
+                    self.grab_process_state = GrabBallStatus.GRABBED
             else:
                 self.open_claw()
                 self.claw_state = 'open'
-                self.grab_process_state = 'waiting'
+                self.grab_process_state = GrabBallStatus.WAITING
 
-            self.get_logger().info(f'grab ball process state {self.grab_process_state}, claw state {self.claw_state}')
+            self.get_logger().info(f'grab ball process state {self.grab_process_state}, claw state {self.claw_state}, ball size status {ball_size_status}')
 
         except Exception as e:
             self.get_logger().error(f'Error in ball_info_callback: {str(e)}')
+
+    def check_ball_size(self, size):
+        if self.ball_size_normal_min <= size <= self.ball_size_normal_max:
+            return BallSizeStatus.NORMAL
+        elif self.ball_size_threshold_min <= size < self.ball_size_normal_min or self.ball_size_normal_max < size <= self.ball_size_threshold_max:
+            self.get_logger().warn(f'Ball size {size} is outside normal range but within thresholds')
+            return BallSizeStatus.SUSPICIOUS
+        else:
+            self.get_logger().error(f'Invalid ball size detected: {size}')
+            return BallSizeStatus.INVALID
 
     def close_claw(self):
         self.claw_cmd.data = 'close'
         self.claw_cmd_pub.publish(self.claw_cmd)
 
-
     def stop_claw(self):
         self.claw_cmd.data = 'stop'
         self.claw_cmd_pub.publish(self.claw_cmd)
-
 
     def open_claw(self):
         self.claw_cmd.data = 'open'
