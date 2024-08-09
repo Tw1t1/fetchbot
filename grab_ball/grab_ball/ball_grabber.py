@@ -57,7 +57,7 @@ class GrabBall(Node):
         try:
             self.current_position = msg.data
 
-            if self.grab_process_state == 'waiting' and self.current_position > 0.5:
+            if self.grab_process_state == GrabBallStatus.WAITING and self.current_position > 0.5:
                 self.open_claw()
             
             ball_in_grabe_position_range = self.position_range_min <= self.current_position <= self.position_range_max
@@ -94,7 +94,7 @@ class GrabBall(Node):
                 self.get_logger().info(f'Ball to grab: pos ({round(self.ball_info.x, 5)}, {round(self.ball_info.y, 5)}) , size {round(self.ball_info.z, 5)}')
 
                 grab_status = String()
-                grab_status.data = self.grab_process_state
+                grab_status.data = self.grab_process_state.name
                 self.grab_ball_status_pub.publish(grab_status)
 
                 if not self.position_unchanged:
