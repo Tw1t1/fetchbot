@@ -40,8 +40,8 @@ class GrabBall(Node):
         self.unchanged_position_count = 0
         self.position_unchanged = False
         self.position_change_threshold = 0.1
-        self.position_range_min = 2.0
-        self.position_range_max = 3.0
+        self.position_range_min = 3.0
+        self.position_range_max = 4.0
         
         # New variables for ball size analysis
         self.ball_size_normal_min = 0.5
@@ -57,18 +57,22 @@ class GrabBall(Node):
         try:
             self.current_position = msg.data
 
-            if self.grab_process_state == GrabBallStatus.WAITING and self.current_position > 0.5:
+            if self.grab_process_state == GrabBallStatus.WAITING and self.current_position > 0.5 \
+                or self.current_position > 4.5:
                 self.open_claw()
-            
+                self.claw_state = 'open'
+                self.grab_process_state = GrabBallStatus.WAITING
+
+
             ball_in_grabe_position_range = self.position_range_min <= self.current_position <= self.position_range_max
             
             if ball_in_grabe_position_range and self.grab_process_state == GrabBallStatus.CLOSING:
                 if self.previous_position is not None:
                     self.current_position = round(self.current_position, 2)
-
+                    self.get_logger().info(f'position- previuse = {abs(self.current_position - self.previous_position)}')
                     if abs(self.current_position - self.previous_position) < self.position_change_threshold:
                         self.unchanged_position_count += 1
-                        if self.unchanged_position_count >= 4:
+                        if self.unchanged_position_count >= 5:
                             self.position_unchanged = True
                     else:
                         self.unchanged_position_count = 0
@@ -90,7 +94,7 @@ class GrabBall(Node):
             
             ball_size_status = self.check_ball_size(self.ball_info.z)
             
-            if (ball_in_left_bottom or ball_in_right_bottom) and ball_size_status != BallSizeStatus.INVALID:
+            if (ball_in_left_bottom or ball_in_right_bottom) and ball_size_status == BallSizeStatus.NORMAL:
                 self.get_logger().info(f'Ball to grab: pos ({round(self.ball_info.x, 5)}, {round(self.ball_info.y, 5)}) , size {round(self.ball_info.z, 5)}')
 
                 grab_status = String()
