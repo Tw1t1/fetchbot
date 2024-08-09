@@ -23,7 +23,6 @@ class GrabBall(Node):
 
         self.timer = self.create_timer(0.1, self.publish_status)
 
-        self.ball_info = None
         self.grab_process_state = GrabStatus.WAITING
 
         self.current_position = None
@@ -66,14 +65,17 @@ class GrabBall(Node):
 
 
     def ball_info_callback(self, msg):
-        try:
-            self.ball_info = msg
 
-            if self.should_grab_ball():
+        if msg is None:
+            self.get_logger().warn('No ball information received yet.')
+            return
+        
+        try:      
+            if self.should_grab_ball(msg.x, msg.y, msg.z):
                 self.close_claw()
                 self.grab_process_state = GrabStatus.CLOSING
                 self.get_logger().info('Ball detected. Closing claw.')
-            elif self.grab_process_state != GrabStatus.GRABBED:
+            elif self.grab_process_state == GrabStatus.CLOSING and self.current_position > self.position_range_max:
                 self.open_claw()
                 self.grab_process_state = GrabStatus.WAITING
                 self.get_logger().info('Ball not detected. Opening claw.')
@@ -81,37 +83,33 @@ class GrabBall(Node):
         except Exception as e:
             self.get_logger().error(f'Error in ball_info_callback: {str(e)}')
 
-    def should_grab_ball(self):
-        if self.ball_info is None:
-            self.get_logger().warn('No ball information received yet.')
-            return False
-
-        x, y, size = self.ball_info.x, self.ball_info.y, self.ball_info.z
+    def should_grab_ball(self, x, y, size):
         
         position_in_range = self.x_min <= x <= self.x_max and self.y_min <= y <= self.y_max
         size_in_range = self.ball_size_min <= size <= self.ball_size_max
 
         if position_in_range and size_in_range:
-            self.get_logger().debug(f'Ball detected at position ({x}, {y}) with size {size}. Should grab.')
+            self.get_logger().info(f'Ball detected at position ({x}, {y}) with size {size}. Should grab.')
             return True
         else:
-            self.get_logger().debug(f'Ball detected at position ({x}, {y}) with size {size}. Should not grab.')
+            self.get_logger().info(f'Ball detected at position ({x}, {y}) with size {size}. Should not grab.')
             return False
+
 
     def is_ball_grabbed(self):
         if self.grab_process_state != GrabStatus.CLOSING:
-            self.get_logger().debug(f"Not in CLOSING state. Current state: {self.grab_process_state}")
+            self.get_logger().info(f"Not in CLOSING state. Current state: {self.grab_process_state}")
             return False
 
         is_position_in_grab_range = self.position_range_min <= self.current_position <= self.position_range_max
 
         if not is_position_in_grab_range:
-            self.get_logger().debug(f"Current position {self.current_position} is outside the grab range [{self.position_range_min}, {self.position_range_max}]")
+            self.get_logger().info(f"Current position {self.current_position} is outside the grab range [{self.position_range_min}, {self.position_range_max}]")
             self.reset_grab_detection()
             return False
 
         if self.previous_position is None:
-            self.get_logger().debug("No previous position recorded. Starting grab detection.")
+            self.get_logger().info("No previous position recorded. Starting grab detection.")
             self.previous_position = self.current_position
             return False
 
@@ -120,18 +118,19 @@ class GrabBall(Node):
 
         if is_position_stable:
             self.unchanged_position_count += 1
-            self.get_logger().debug(f"Position is stable. Unchanged count: {self.unchanged_position_count}")
+            self.get_logger().info(f"Position is stable. Unchanged count: {self.unchanged_position_count}")
 
             is_grab_detected = self.unchanged_position_count >= self.stable_position_count_threshold
             if is_grab_detected:
                 self.get_logger().info("Ball grabbed!")
                 return True
         else:
-            self.get_logger().debug(f"Position change {position_change} exceeds the threshold {self.position_change_threshold}. Resetting grab detection.")
+            self.get_logger().info(f"Position change {position_change} exceeds the threshold {self.position_change_threshold}. Resetting grab detection.")
             self.reset_grab_detection()
 
         self.previous_position = self.current_position
         return False
+
 
     def reset_grab_detection(self):
         self.unchanged_position_count = 0
@@ -144,26 +143,36 @@ class GrabBall(Node):
         self.claw_cmd_pub.publish(self.claw_cmd)
         self.get_logger().debug('Claw close command sent.')
 
+
     def stop_claw(self):
         self.claw_cmd.data = 'stop'
         self.claw_cmd_pub.publish(self.claw_cmd)
         self.get_logger().debug('Claw stop command sent.')
+
 
     def open_claw(self):
         self.claw_cmd.data = 'open'
         self.claw_cmd_pub.publish(self.claw_cmd)
         self.get_logger().debug('Claw open command sent.')
 
+
     def publish_status(self):
         self.status.data = self.grab_process_state.name
         self.grab_ball_status_pub.publish(self.status)
 
+
 def main(args=None):
+
     rclpy.init(args=args)
-    grab_ball_node = GrabBall()
-    rclpy.spin(grab_ball_node)
-    grab_ball_node.destroy_node()
-    rclpy.shutdown()
+    try:
+        grab_ball_node = GrabBall()
+        rclpy.spin(grab_ball_node)
+    except Exception as e:
+        print(f'Error in main: {str(e)}')
+    finally:
+        grab_ball_node.destroy_node()
+        rclpy.shutdown()
+
 
 if __name__ == '__main__':
     main()
