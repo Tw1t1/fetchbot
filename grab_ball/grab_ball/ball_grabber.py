@@ -98,45 +98,45 @@ class GrabBall(Node):
             self.get_logger().debug(f'Ball detected at position ({x}, {y}) with size {size}. Should not grab.')
             return False
 
-def is_ball_grabbed(self):
-    if self.grab_process_state != GrabStatus.CLOSING:
-        self.get_logger().debug(f"Not in CLOSING state. Current state: {self.grab_process_state}")
-        return False
+    def is_ball_grabbed(self):
+        if self.grab_process_state != GrabStatus.CLOSING:
+            self.get_logger().debug(f"Not in CLOSING state. Current state: {self.grab_process_state}")
+            return False
 
-    is_position_in_grab_range = self.position_range_min <= self.current_position <= self.position_range_max
+        is_position_in_grab_range = self.position_range_min <= self.current_position <= self.position_range_max
 
-    if not is_position_in_grab_range:
-        self.get_logger().debug(f"Current position {self.current_position} is outside the grab range [{self.position_range_min}, {self.position_range_max}]")
-        self.reset_grab_detection()
-        return False
+        if not is_position_in_grab_range:
+            self.get_logger().debug(f"Current position {self.current_position} is outside the grab range [{self.position_range_min}, {self.position_range_max}]")
+            self.reset_grab_detection()
+            return False
 
-    if self.previous_position is None:
-        self.get_logger().debug("No previous position recorded. Starting grab detection.")
+        if self.previous_position is None:
+            self.get_logger().debug("No previous position recorded. Starting grab detection.")
+            self.previous_position = self.current_position
+            return False
+
+        position_change = abs(self.current_position - self.previous_position)
+        is_position_stable = 0 <= position_change <= self.position_change_threshold
+
+        if is_position_stable:
+            self.unchanged_position_count += 1
+            self.get_logger().debug(f"Position is stable. Unchanged count: {self.unchanged_position_count}")
+
+            is_grab_detected = self.unchanged_position_count >= self.stable_position_count_threshold
+            if is_grab_detected:
+                self.get_logger().info("Ball grabbed!")
+                return True
+        else:
+            self.get_logger().debug(f"Position change {position_change} exceeds the threshold {self.position_change_threshold}. Resetting grab detection.")
+            self.reset_grab_detection()
+
         self.previous_position = self.current_position
         return False
 
-    position_change = abs(self.current_position - self.previous_position)
-    is_position_stable = 0 <= position_change <= self.position_change_threshold
-
-    if is_position_stable:
-        self.unchanged_position_count += 1
-        self.get_logger().debug(f"Position is stable. Unchanged count: {self.unchanged_position_count}")
-
-        is_grab_detected = self.unchanged_position_count >= self.stable_position_count_threshold
-        if is_grab_detected:
-            self.get_logger().info("Ball grabbed!")
-            return True
-    else:
-        self.get_logger().debug(f"Position change {position_change} exceeds the threshold {self.position_change_threshold}. Resetting grab detection.")
-        self.reset_grab_detection()
-
-    self.previous_position = self.current_position
-    return False
-
-def reset_grab_detection(self):
-    self.unchanged_position_count = 0
-    self.previous_position = None
-    self.get_logger().debug("Grab detection reset.")
+    def reset_grab_detection(self):
+        self.unchanged_position_count = 0
+        self.previous_position = None
+        self.get_logger().debug("Grab detection reset.")
 
 
     def close_claw(self):
