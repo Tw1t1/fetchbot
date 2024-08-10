@@ -91,8 +91,6 @@ def generate_launch_description():
     inhibit_follow_ball_node = Node(
             package='ball_follow',
             executable='grab_ball_follow_ball_inhibitore',
-            remappings=[('/grab_ball_follow_ball_inhibitore','/diff_cont/cmd_vel_unstamped')],
-
          )
 
 

@@ -31,7 +31,7 @@ class FollowBall(Node):
         """
         
         super().__init__('follow_ball')
-        self.subscription = self.create_subscription(Point, '/detected_ball', self.follow_callback, 10)
+        self.subscription = self.create_subscription(Point, 'orient_home_ball_detection_inhibitore', self.follow_callback, 10)
         self.publisher_ = self.create_publisher(Twist, '/follow_ball', 10)
         self.status_publisher = self.create_publisher(String, '/follow_ball/status', 10)
         self.status_timer = self.create_timer(1.0, self.publish_status)
