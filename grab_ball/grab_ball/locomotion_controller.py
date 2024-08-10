@@ -82,27 +82,49 @@ class LocomotionController(Node):
         try:
             linear = self.linear_velocity
             angular = self.angular_velocity
-
-            # Calculate wheel velocities
-            left_velocity, right_velocity = self.calculate_wheel_velocities_skid(linear, angular)
             
+            left_velocity, right_velocity = 0.0, 0.0
+            
+            if linear != 0 and angular != 0:
+                if self.use_angular_velocity and (linear*angular) > 0:
+                    left_velocity, right_velocity = self.calculate_wheel_velocities_skid(linear, 0)
+                elif self.use_angular_velocity and (linear*angular) < 0:
+                    left_velocity, right_velocity = self.calculate_wheel_velocities_skid(0, angular)
+
+                # Toggle between linear and angular velocity
+                self.use_angular_velocity = not self.use_angular_velocit
+            else:
+                left_velocity, right_velocity = self.calculate_wheel_velocities_skid(0, angular)
+
             # Calculate duty cycles
             max_velocity = max(abs(left_velocity), abs(right_velocity), 1e-6)  # Avoid division by zero
 
             left_duty_cycle, left_direction = self.velocity_to_duty_cycle(left_velocity, max_velocity)
             right_duty_cycle, right_direction = self.velocity_to_duty_cycle(right_velocity, max_velocity)
-            
-            if linear != 0 and angular != 0:
-                if self.use_angular_velocity and (linear*angular) > 0:
-                    left_direction *= -1
-                elif self.use_angular_velocity and (linear*angular) < 0:
-                    right_direction *= -1
-                # Toggle between linear and angular velocity
-                self.use_angular_velocity = not self.use_angular_velocity
-            
             # Set motor commands
             self.set_motor(self.left_motor, left_duty_cycle, left_direction, 'left')
             self.set_motor(self.right_motor, right_duty_cycle, right_direction, 'right')
+
+            # # Calculate wheel velocities
+            # left_velocity, right_velocity = self.calculate_wheel_velocities_skid(linear, angular)
+            
+            # # Calculate duty cycles
+            # max_velocity = max(abs(left_velocity), abs(right_velocity), 1e-6)  # Avoid division by zero
+
+            # left_duty_cycle, left_direction = self.velocity_to_duty_cycle(left_velocity, max_velocity)
+            # right_duty_cycle, right_direction = self.velocity_to_duty_cycle(right_velocity, max_velocity)
+            
+            # if linear != 0 and angular != 0:
+            #     if self.use_angular_velocity and (linear*angular) > 0:
+            #         left_direction *= -1
+            #     elif self.use_angular_velocity and (linear*angular) < 0:
+            #         right_direction *= -1
+            #     # Toggle between linear and angular velocity
+            #     self.use_angular_velocity = not self.use_angular_velocity
+            
+            # # Set motor commands
+            # self.set_motor(self.left_motor, left_duty_cycle, left_direction, 'left')
+            # self.set_motor(self.right_motor, right_duty_cycle, right_direction, 'right')
             
         except Exception as e:
             self.get_logger().error(f'Error in unified_motor_command: {str(e)}')
@@ -142,7 +164,7 @@ class LocomotionController(Node):
                 motor.stop()
                 direction = "stoped"
         
-            self.get_logger().info(f'{motor_name.capitalize()} motor moving {direction} at {duty_cycle}% duty cycle')
+            self.get_logger().debug(f'{motor_name.capitalize()} motor moving {direction} at {duty_cycle}% duty cycle')
         except Exception as e:
             self.get_logger().error(f'Error setting {motor_name} motor: {str(e)}')
 
