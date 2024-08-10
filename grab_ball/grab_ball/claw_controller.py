@@ -21,12 +21,14 @@ class ClawController(Node):
 
             self.declare_parameter('min_claw_value', 0.0)
             self.declare_parameter('max_claw_value', 5.0)
+            self.declare_parameter('claw_sensor_treshold', 0.5)
 
             self.IN1 = self.get_parameter('in1_pin').get_parameter_value().integer_value
             self.IN2 = self.get_parameter('in2_pin').get_parameter_value().integer_value
             self.EN = self.get_parameter('en_pin').get_parameter_value().integer_value
             self.MIN_VALUE = self.get_parameter('min_claw_value').get_parameter_value().double_value
             self.MAX_VALUE = self.get_parameter('max_claw_value').get_parameter_value().double_value
+            self.claw_sensor_treshold = self.get_parameter('claw_sensor_treshold').get_parameter_value().double_value
 
             timer_period = 0.1  # seconds
             self.timer = self.create_timer(timer_period, self.timer_position_pub)
@@ -87,10 +89,9 @@ class ClawController(Node):
             
             self.get_logger().info(f'Current position: {current_position}, Direction: {direction}')
 
-            motor_sensor_treshold = 0.5
             
-            if (direction > 0 and current_position > (self.MIN_VALUE + motor_sensor_treshold)) or \
-               (direction < 0 and current_position < (self.MAX_VALUE - motor_sensor_treshold)):
+            if (direction > 0 and current_position > (self.MIN_VALUE + self.claw_sensor_treshold)) or \
+               (direction < 0 and current_position < (self.MAX_VALUE - self.claw_sensor_treshold)):
                 
                 self.get_logger().info(f'Current position: {current_position}, Direction: {direction}')
                 self.get_logger().info(f'current duty cycle: {self.motor.get_duty_cycle()}')

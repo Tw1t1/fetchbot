@@ -23,27 +23,38 @@ class GrabBall(Node):
 
         self.timer = self.create_timer(0.1, self.timer_callback)
 
-        self.rcv_timeout_secs = 1.5
-        self.lastrcvtime = time.time() - 10000
-        
-        self.grab_process_state = GrabStatus.WAITING
+        self.declare_parameter('position_change_threshold', 0.1)
+        self.declare_parameter('position_range_min', 3.0)
+        self.declare_parameter('position_range_max', 4.0)
+        self.declare_parameter('ball_size_min', 0.65)
+        self.declare_parameter('ball_size_max', 0.9)
+        self.declare_parameter('x_min', -0.25)
+        self.declare_parameter('x_max', 0.6)
+        self.declare_parameter('y_min', 0.4)
+        self.declare_parameter('y_max', 0.65)
 
+        # Varibels for grab detect
         self.current_position = None
         self.previous_position = None
         self.unchanged_position_count = 0
-        self.position_change_threshold = 0.1
-        self.position_range_min = 3.0
-        self.position_range_max = 4.0
         self.stable_position_count_threshold = 3
+        self.position_change_threshold = self.get_parameter('position_change_threshold').get_parameter_value().double_value
+        self.position_range_min = self.get_parameter('position_range_min').get_parameter_value().double_value
+        self.position_range_max = self.get_parameter('position_range_max').get_parameter_value().double_value
+        
 
         # Varibels for ball info to grab
-        self.ball_size_min = 0.65
-        self.ball_size_max = 0.9
-        self.x_min, self.x_max = -0.25, 0.6
-        self.y_min, self.y_max = 0.40, 0.65
+        self.ball_size_min = self.get_parameter('ball_size_min').get_parameter_value().double_value
+        self.ball_size_max = self.get_parameter('ball_size_max').get_parameter_value().double_value
+        self.x_min = self.get_parameter('x_min').get_parameter_value().double_value
+        self.x_max = self.get_parameter('x_max').get_parameter_value().double_value
+        self.y_min = self.get_parameter('y_min').get_parameter_value().double_value 
+        self.y_max = self.get_parameter('y_max').get_parameter_value().double_value
 
-        self.ball_info_threshold = 0.05 # not in use now
-
+        
+        self.rcv_timeout_secs = 1.5
+        self.lastrcvtime = time.time() - 10000
+        self.grab_process_state = GrabStatus.WAITING
         self.claw_cmd = String()
         self.status = String()
 
