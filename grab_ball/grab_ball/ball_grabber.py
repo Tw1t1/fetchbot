@@ -166,7 +166,7 @@ class GrabBall(Node):
 
         current_time = time.time()    
         if self.grab_process_state == GrabStatus.GRABBED and \
-            (current_time - self.lastrcvtime) < self.rcv_timeout_secs:
+            (current_time - self.lastrcvtime) > self.rcv_timeout_secs: 
             self.get_logger().info("Ball released!")
             self.open_claw()
             self.grab_process_state = GrabStatus.WAITING
