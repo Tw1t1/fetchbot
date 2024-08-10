@@ -4,7 +4,7 @@
       <let name="rviz_config_path"
             value="$(find-pkg-share fetchbot_bringup)/rviz/urdf_config.rviz" />
       <let name="gazebo_world_path"
-            value="$(find-pkg-share fetchbot_bringup)/worlds/my_world.world" />
+            value="$(find-pkg-share fetchbot_bringup)/worlds/obstacles.world" />
       <let name="gazebo_params_file"
             value="$(find-pkg-share fetchbot_description)/config/gazebo_params.yaml" />      
 
@@ -30,5 +30,10 @@
 
       <node pkg="controller_manager" exec="spawner" output="screen" 
           args="joint_broad" />
+          
+    <node pkg="obstacle_avoidance" exec="feel_force" output="screen" />
+
+    <node pkg="obstacle_avoidance" exec="run_away" output="screen" />
+
 
 </launch>
