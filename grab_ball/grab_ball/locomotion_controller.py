@@ -86,13 +86,13 @@ class LocomotionController(Node):
             left_velocity, right_velocity = 0.0, 0.0
             
             if linear != 0 and angular != 0:
-                if self.use_angular_velocity > 0:
+                if self.use_angular_velocity:
                     left_velocity, right_velocity = self.calculate_wheel_velocities_skid(linear, 0)
-                elif self.use_angular_velocity < 0:
+                elif self.use_angular_velocity:
                     left_velocity, right_velocity = self.calculate_wheel_velocities_skid(0, angular)
 
                 # Toggle between linear and angular velocity
-                self.use_angular_velocity = not self.use_angular_velocit
+                self.use_angular_velocity = not self.use_angular_velocity
             else:
                 left_velocity, right_velocity = self.calculate_wheel_velocities_skid(linear, angular)
 
