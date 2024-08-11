@@ -8,7 +8,7 @@ claw_controller:
     max_claw_value: 5.0 # 5V
     claw_sensor_treshold: 0.5
 
-ball_grabber:
+grab_ball:
   ros__parameters:
     position_change_threshold: 0.1
     position_range_min: 3.0
@@ -17,5 +17,5 @@ ball_grabber:
     ball_size_max: 0.9
     x_min: -1.0 #-0.25
     x_max: 1.0 #0.6
-    y_min: 0.6 #0.4
+    y_min: 0.4
     y_max: 1.0 #0.65
