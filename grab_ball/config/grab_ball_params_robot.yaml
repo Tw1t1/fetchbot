@@ -15,7 +15,7 @@ ball_grabber:
     position_range_max: 4.0
     ball_size_min: 0.65
     ball_size_max: 0.9
-    x_min: -0.25
-    x_max: 0.6
-    y_min: 0.4
-    y_max: 0.65
+    x_min: -1.0 #-0.25
+    x_max: 1.0 #0.6
+    y_min: 0.6 #0.4
+    y_max: 1.0 #0.65

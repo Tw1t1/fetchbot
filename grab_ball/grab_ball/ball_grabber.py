@@ -59,6 +59,7 @@ class GrabBall(Node):
         self.status = String()
 
         self.get_logger().info('Waiting for ball to grab ... ')
+        self.get_logger().info(f'min: {self.ball_size_min}, max: {self.ball_size_max}, xmin: {self.x_min}, xmax:{self.x_max}, ymin: {self.y_min}, ymax:{self.y_max} ')
 
 
     def position_callback(self, msg):
