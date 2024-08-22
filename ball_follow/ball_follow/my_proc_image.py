@@ -3,8 +3,8 @@
 
 import cv2
 import numpy as np
-# import imutils
 
+prev_image = None
 
 def find_circles(image, tuning_params, tuning_mode):
     """
@@ -17,7 +17,7 @@ def find_circles(image, tuning_params, tuning_mode):
     Returns:
         tuple: (normalized keypoints, output image, tuning image)
     """
-    
+    global prev_img
     # Extract parameters
     thresh_min = (tuning_params["h_min"], tuning_params["s_min"], tuning_params["v_min"])
     thresh_max = (tuning_params["h_max"], tuning_params["s_max"], tuning_params["v_max"])
@@ -25,7 +25,14 @@ def find_circles(image, tuning_params, tuning_mode):
 
     search_window_px = convert_rect_perc_to_pixels(search_window, image)
 
-    
+    if prev_img is None:
+        prev_img = image
+    alpha = 0.2
+
+    beta = (1.0 - alpha)
+
+    image = cv2.addWeighted(image, alpha, prev_img, beta, 0.0)
+
     # Image preprocessing
     blurred = cv2.GaussianBlur(image, (11, 11), 0)
     hsv = cv2.cvtColor(blurred, cv2.COLOR_BGR2HSV)
@@ -35,8 +42,7 @@ def find_circles(image, tuning_params, tuning_mode):
     # Noise reduction
     mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, np.ones((3,3), np.uint8))
     mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, np.ones((3,3), np.uint8))
-    # mask = cv2.dilate(mask, None, iterations=2)
-    # mask = cv2.erode(mask, None, iterations=2)
+
 
     # Apply the search window
     working_image = apply_search_window(mask, search_window)
@@ -45,7 +51,7 @@ def find_circles(image, tuning_params, tuning_mode):
     # contours = imutils.grab_contours(contours)
 
     keypoints = []
-    print("HAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
+
     for c in contours:
         ((x, y), radius) = cv2.minEnclosingCircle(c)
         M = cv2.moments(c)
@@ -81,8 +87,6 @@ def find_circles(image, tuning_params, tuning_mode):
  
     keypoints_normalised = [normalise_keypoint(working_image, k) for k in keypoints]
     
-    # draw_max_circle_info(keypoints_normalised,tuning_image)
-
     return keypoints_normalised, out_image, tuning_image
 
 
@@ -127,9 +131,6 @@ def convert_rect_perc_to_pixels(rect_perc, image):
 def normalise_keypoint(cv_image, kp):
     
     height, width = cv_image.shape[:2]
-
-    # rows = float(cv_image.shape[0])
-    # cols = float(cv_image.shape[1])
     
     center_x = 0.5*width
     center_y = 0.5*height
@@ -168,41 +169,3 @@ def get_tuning_params():
 
 def wait_on_gui():
     cv2.waitKey(2)
-
-
-def draw_max_circle_info(keypoints_normalised, image):
-
-    if len(keypoints_normalised) > 0:
-
-        # Find the keypoint with maximum size
-        max_keypoint = max(keypoints_normalised, key=lambda kp: kp.size)
-        
-        # Extract information from the max keypoint
-        x, y = map(float, max_keypoint.pt)
-        size = max_keypoint.size
-
-        # Font settings
-        font = cv2.FONT_HERSHEY_SIMPLEX
-        font_scale = 0.5
-        font_color = (255, 0, 255)  
-        line_type = 1
-        # Prepare the text with coordinates and size
-        text = f"Max: ({x:.4f},{y:.4f}), size={size:.4f}"
-        
-        # Get the size of the text for positioning
-        (text_width, text_height), _ = cv2.getTextSize(text, font, font_scale, line_type)
-        
-        # Calculate the position for the text (above the keypoint)
-        text_x = max(0, x - text_width // 2)
-        text_y = max(text_height, y - size - 10)
-        
-        # Ensure text_x and text_y are integers
-        text_x, text_y = int(text_x), int(text_y)
-        
-        # Draw a dark background for the text to improve readability
-        cv2.rectangle(image, (text_x - 2, text_y - text_height - 2),
-                    (text_x + text_width + 2, text_y + 2),
-                    (0, 0, 0), -1)
-        
-        # Draw the text
-        cv2.putText(image, text, (text_x, text_y), font, font_scale, font_color, line_type)
