@@ -1,4 +1,4 @@
-from setuptools import find_packages, setup
+from setuptools import setup
 from glob import glob
 
 package_name = 'grab_ball'
@@ -6,7 +6,7 @@ package_name = 'grab_ball'
 setup(
     name=package_name,
     version='0.0.0',
-    packages=find_packages(exclude=['test']),
+    packages=[package_name],
     data_files=[
         ('share/ament_index/resource_index/packages',
             ['resource/' + package_name]),
@@ -26,6 +26,9 @@ setup(
             'claw_controller = grab_ball.claw_controller:main',
             'locomotion_controller = grab_ball.locomotion_controller:main',
             'grab_ball = grab_ball.ball_grabber:main',
+            'message_counter = grab_ball.message_counter:main',
+            'distance_classifier = grab_ball.distance_classifier:main',
+            'video_frame_publisher = grab_ball.video_frame_publisher:main',
         ],
     },
 )

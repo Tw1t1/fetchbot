@@ -38,7 +38,8 @@ class InhibitorNode(Node):
         self.lastrcvtime = time.time()
         self.inhibit_publish = msg.data != "WAITING" 
         
-
+    def cleanup(self):
+        self.get_logger().info('Node shutting down...')
 
 def main(args=None):
     """
@@ -54,7 +55,9 @@ def main(args=None):
         inhibitor_node.get_logger().error(f'Unexpected error: {str(e)}')
     finally:
         inhibitor_node.destroy_node()
-        rclpy.shutdown()
+        inhibitor_node.cleanup()
+        if rclpy.ok():
+            rclpy.shutdown()
 
 if __name__ == '__main__':
     main()
