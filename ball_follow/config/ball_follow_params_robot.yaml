@@ -45,4 +45,7 @@ follow_ball:
     max_size_thresh: 0.4
     filter_value: 0.9
     search_rotations: 1
+    position_threshold: 0.05
+    size_threshold: 0.05
+    unchanged_time_threshold: 1.0
 
