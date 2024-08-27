@@ -28,8 +28,8 @@ class FeelForceNode(Node):
         valid_indices = np.where((ranges >= scan.range_min) & (ranges <= scan.range_max))
         valid_ranges = ranges[valid_indices]
         valid_angles = angles[valid_indices]
-        if len(valid_ranges) > 0 and valid_ranges.min() < 0.5:
-            self.get_logger().info(f"Valid: {valid_ranges.min()}")
+        # if len(valid_ranges) > 0 and valid_ranges.min() < 0.5:
+        #     self.get_logger().info(f"Valid: {valid_ranges.min()}")
 
         # Scale the valid ranges
         scale_ranges = valid_ranges * 2     # Scale by 2, adjust as needed
@@ -37,8 +37,8 @@ class FeelForceNode(Node):
         # Inverse cube scaling
         inverse_cube_scale_ranges = 1 / (scale_ranges ** 3)
 
-        if len(inverse_cube_scale_ranges) > 0:
-            self.get_logger().info(f"Inverse: {inverse_cube_scale_ranges.max()}")
+        # if len(inverse_cube_scale_ranges) > 0:
+        #     self.get_logger().info(f"Inverse: {inverse_cube_scale_ranges.max()}")
 
         forces_x = np.cos(valid_angles) * inverse_cube_scale_ranges
         forces_y = np.sin(valid_angles) * inverse_cube_scale_ranges
