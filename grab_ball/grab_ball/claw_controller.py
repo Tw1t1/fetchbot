@@ -2,8 +2,8 @@ import rclpy
 from rclpy.node import Node
 from std_msgs.msg import String, Float64
 
-from hardware_librery.ADCReader import ADCReader
-from hardware_librery.L298N import L298N
+from hardware_library.ADCReader import ADCReader
+from hardware_library.L298N import L298N
 
 class ClawController(Node):
 

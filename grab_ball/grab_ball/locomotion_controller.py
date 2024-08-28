@@ -1,7 +1,7 @@
 import rclpy
 from rclpy.node import Node
 from geometry_msgs.msg import Twist
-from hardware_librery.L298N import L298N
+from hardware_library.L298N import L298N
 import time
 
 class LocomotionController(Node):

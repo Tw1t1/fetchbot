@@ -4,6 +4,9 @@ from std_msgs.msg import String, Float64
 from geometry_msgs.msg import Point
 from enum import Enum
 import time
+import joblib
+import os
+
 
 class GrabStatus(Enum):
     WAITING = 0
@@ -15,6 +18,7 @@ class GrabStatus(Enum):
 class GrabBall(Node):
     def __init__(self):
         super().__init__('grab_ball')
+
         self.position_sub = self.create_subscription(Float64, 'position', self.position_callback, 10)
         self.ball_info_sub = self.create_subscription(Point, '/detected_ball', self.ball_info_callback, 10)
 
@@ -22,6 +26,13 @@ class GrabBall(Node):
         self.claw_cmd_pub = self.create_publisher(String, 'claw_cmd', 10)
 
         self.timer = self.create_timer(0.1, self.timer_callback)
+
+
+        file_path = os.path.dirname(__file__)
+
+        model_path = os.path.join(file_path, "..", "distance_models", "rf_calibration_model.joblib")
+        loaded_model_info = joblib.load(model_path)
+        self.rf_model = loaded_model_info['model']
 
         self.declare_parameter('position_change_threshold', 0.1)
         self.declare_parameter('position_range_min', 3.0)
@@ -34,7 +45,7 @@ class GrabBall(Node):
         self.declare_parameter('y_max', 0.65)
 
         # Varibels for grab detect
-        self.current_position = None
+        self.current_position = -1.0
         self.previous_position = None
         self.unchanged_position_count = 0
         self.stable_position_count_threshold = 3
@@ -59,60 +70,78 @@ class GrabBall(Node):
         self.status = String()
 
         self.get_logger().info('Waiting for ball to grab ... ')
-        self.get_logger().info(f'min: {self.ball_size_min}, max: {self.ball_size_max}, xmin: {self.x_min}, xmax:{self.x_max}, ymin: {self.y_min}, ymax:{self.y_max} ')
 
 
+    def predict_distance(self, features):
+        if len(features) != self.rf_model.n_features_in_:
+            self.get_logger().error(f"Model expects {self.n_features} features, but got {len(features)}")
+            return -1.0
+        
+        predicted_distance  = self.rf_model.predict([features])
+        
+        self.get_logger().info(f'Distance predicted: {predicted_distance[0]}, for size: {features[0]}, pos: {features[1]}, {features[2]}')
+        
+        return predicted_distance[0]
+    
+
+    def prepare_features(self, ball_info):
+        # fit featuers for model expected
+        all_features = [ball_info.z, ball_info.x, ball_info.y]
+        return all_features[:self.rf_model.n_features_in_]
+    
+    
+    
     def position_callback(self, msg):
         try:
             self.current_position = round(msg.data, 3)
 
             if self.grab_process_state == GrabStatus.WAITING and self.current_position > 0.5:
                 self.open_claw()
-                self.get_logger().info(f'Claw opened. Current position: {self.current_position}')
+                # self.get_logger().info(f'Claw opened. Current position: {self.current_position}')
 
             if self.is_ball_grabbed():
                 self.stop_claw()
                 self.grab_process_state = GrabStatus.GRABBED
-                self.get_logger().info('Ball grabbed. Claw stopped.')
+                # self.get_logger().info('Ball grabbed. Claw stopped.')
         except Exception as e:
             self.get_logger().error(f'Error in position_callback: {str(e)}')
 
 
     def ball_info_callback(self, msg):
-
-        if msg is None:
-            self.get_logger().warn('No ball information received yet.')
-            return
         
         self.lastrcvtime = time.time()
+        features = self.prepare_features(msg)
+        result = self.predict_distance(features)
         try:
-                
             if self.should_grab_ball(msg.x, msg.y, msg.z):
                 self.close_claw()
                 self.grab_process_state = GrabStatus.CLOSING
-                self.get_logger().info('Ball detected. Closing claw.')
+                # self.get_logger().info('Ball detected. Closing claw.')
             elif self.grab_process_state == GrabStatus.CLOSING and self.current_position > self.position_range_max:
                 self.open_claw()
                 self.grab_process_state = GrabStatus.WAITING
-                self.get_logger().info('Missing grab Ball. Opening claw.')
+                # self.get_logger().info('Missing grab Ball. Opening claw.')
 
         except Exception as e:
             self.get_logger().error(f'Error in ball_info_callback: {str(e)}')
 
     def should_grab_ball(self, x, y, size):
-        
-        if GrabStatus.GRABBED == self.grab_process_state:
-            return False
-        
-        position_in_range = self.x_min <= x <= self.x_max and self.y_min <= y <= self.y_max
-        size_in_range = self.ball_size_min <= size <= self.ball_size_max
+        try:
+            if GrabStatus.GRABBED == self.grab_process_state:
+                return False
+            
+            position_in_range = self.x_min <= x <= self.x_max and self.y_min <= y <= self.y_max
+            size_in_range = self.ball_size_min <= size <= self.ball_size_max
 
-        if position_in_range and size_in_range:
-            self.get_logger().debug(f'Ball detected at position ({x}, {y}) with size {size}. Should grab.')
-            return True
-        else:
-            self.get_logger().debug(f'Ball detected at position ({x}, {y}) with size {size}. Should not grab.')
-            return False
+            if position_in_range and size_in_range:
+                # self.get_logger().info(f'Ball detected at position ({x}, {y}) with size {size}. Should grab.')
+                return True
+            else:
+                # self.get_logger().info(f'Ball detected at position ({x}, {y}) with size {size}. Should not grab.')
+                return False
+
+        except Exception as e:
+            self.get_logger().error(f'Error in should_grab_ball: {str(e)}')
 
 
     def is_ball_grabbed(self):
@@ -140,7 +169,7 @@ class GrabBall(Node):
             self.get_logger().debug(f"Position is stable. Unchanged count: {self.unchanged_position_count}, Position change: {position_change}")
             is_grab_detected = self.unchanged_position_count >= self.stable_position_count_threshold
             if is_grab_detected:
-                self.get_logger().info("Ball grabbed detect!")
+                # self.get_logger().info("Ball grabbed detect!")
                 return True
         else:
             self.get_logger().debug(f"Position change {position_change} exceeds the threshold {self.position_change_threshold}. Resetting grab detection.")
@@ -188,16 +217,19 @@ class GrabBall(Node):
 
 
 def main(args=None):
-
     rclpy.init(args=args)
+    grab_ball_node = GrabBall()
+    
     try:
-        grab_ball_node = GrabBall()
         rclpy.spin(grab_ball_node)
+    except KeyboardInterrupt:
+        pass
     except Exception as e:
         print(f'Error in main: {str(e)}')
     finally:
         grab_ball_node.destroy_node()
-        rclpy.shutdown()
+        if rclpy.ok():
+            rclpy.shutdown()
 
 
 if __name__ == '__main__':
