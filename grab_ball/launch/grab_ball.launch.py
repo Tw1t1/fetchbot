@@ -17,6 +17,13 @@ def generate_launch_description():
         description='Full path to params file for all ball_follow nodes.')
 
 
+
+    model_file = LaunchConfiguration('params_file')
+    model_file_dec = DeclareLaunchArgument(
+        'params_file',
+        default_value=os.path.join(get_package_share_directory('grab_ball'),'distance_models','rf_dist_model_0.3m_calib_graspel.joblib'),
+        description='Full path to distance model file for grab_ball node.')
+    
     use_sim_time = LaunchConfiguration('use_sim_time')
     use_sim_time_dec = DeclareLaunchArgument(
         'use_sim_time',
