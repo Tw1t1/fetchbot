@@ -3,19 +3,22 @@ claw_controller:
     # this is the correct pin on our rpi (BCM mode)
     in1_pin: 21 
     in2_pin: 20 
-    en_pin: 6 
-    min_claw_value: 0.0 # 0V
-    max_claw_value: 5.0 # 5V
-    claw_sensor_treshold: 0.5
+    # en_pin: 6 # not using enable pin fpr pwm
+    min_sensor_value: 0.0 # 0V
+    max_sensor_value: 5.0 # 5V
+    claw_sensor_threshold: 10 # 0.5/5*100 = 10%
 
 grab_ball:
   ros__parameters:
-    position_change_threshold: 0.1
-    position_range_min: 3.0
-    position_range_max: 4.0
-    ball_size_min: 0.65
-    ball_size_max: 0.9
-    x_min: -1.0 #-0.25
-    x_max: 1.0 #0.6
-    y_min: 0.4
-    y_max: 1.0 #0.65
+    position_change_threshold: 2  # 0.1/5*100 = 2%
+    position_range_min: 60 # 3/5*100 = 60%
+    position_range_max: 80 # 4/5*100 = 40%
+    
+
+    # old data to determine if ball should be grab
+    # ball_size_min: 0.65
+    # ball_size_max: 0.9
+    # x_min: -1.0 #-0.25
+    # x_max: 1.0 #0.6
+    # y_min: 0.4
+    # y_max: 1.0 #0.65
