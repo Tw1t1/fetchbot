@@ -15,12 +15,7 @@ class DetectBall(Node):
     def __init__(self):
         super().__init__('detect_ball')
 
-        self.image_sub = self.create_subscription(
-            Image, 
-            "/camera_sensor/image_raw",
-            self.callback,
-            rclpy.qos.QoSPresetProfiles.SENSOR_DATA.value
-            )
+        self.image_sub = self.create_subscription(Image, "/image_in", self.callback,rclpy.qos.QoSPresetProfiles.SENSOR_DATA.value)
         
         self.image_out_pub = self.create_publisher(Image, "/image_out", 1)
         self.image_tuning_pub = self.create_publisher(Image, "/image_tuning", 1)
@@ -69,7 +64,7 @@ class DetectBall(Node):
     def callback(self, data):
         try:
             # only for debugging and testing
-            self.get_logger().info(f"Recived image")
+            # self.get_logger().info(f"Recived image")
 
             cv_image = self.bridge.imgmsg_to_cv2(data, "bgr8")
             if (self.tuning_mode):

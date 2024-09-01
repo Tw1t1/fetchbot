@@ -31,15 +31,15 @@ def generate_launch_description():
     
     tune_detection = LaunchConfiguration('tune_detection')
     tune_detection_dec = DeclareLaunchArgument(
-    'tune_detection',
-    default_value='false',
-    description='Enables tuning mode for the detection')
+        'tune_detection',
+        default_value='false',
+        description='Enables tuning mode for the detection')
     
     use_sim_time = LaunchConfiguration('use_sim_time')
     use_sim_time_dec = DeclareLaunchArgument(
-    'use_sim_time',
-    default_value='false',
-    description='Enables sim time for the follow node.')
+        'use_sim_time',
+        default_value='false',
+        description='Enables sim time for the follow node.')
     
     image_topic = LaunchConfiguration('image_topic')
     image_topic_dec = DeclareLaunchArgument(
@@ -48,18 +48,30 @@ def generate_launch_description():
         description='The name of the input image topic.')
 
     cmd_vel_topic = LaunchConfiguration('cmd_vel_topic')
-    cmd_vel_topic_dec = DeclareLaunchArgument('cmd_vel_topic',
-    default_value='/cmd_vel',
-    description='The name of the output command vel topic.')
+    cmd_vel_topic_dec = DeclareLaunchArgument(
+        'cmd_vel_topic',
+        default_value='/cmd_vel',
+        description='The name of the output command vel topic.')
 
     enable_3d_tracker = LaunchConfiguration('enable_3d_tracker')
     enable_3d_tracker_dec = DeclareLaunchArgument(
-    'enable_3d_tracker',
-    default_value='false',
-    description='Enables the 3D tracker node')
+        'enable_3d_tracker',
+        default_value='false',
+        description='Enables the 3D tracker node')
 
 
+    enable_real_camera = LaunchConfiguration('enable_real_camera')
+    enable_real_camera_dec = DeclareLaunchArgument(
+        'enable_real_camera',
+        default_value='true',
+        description='Enables the USB camera node')
 
+
+    camera_node = Node(
+            package='ball_follow',
+            executable='camera',
+            condition=IfCondition(enable_real_camera)
+         )
 
     detect_node = Node(
             package='ball_follow',
@@ -80,7 +92,8 @@ def generate_launch_description():
             package='ball_follow',
             executable='follow_ball',
             parameters=[params_file, {'use_sim_time': use_sim_time}],
-            condition=UnlessCondition(detect_only)
+            remappings=[('/detected_ball','/orient_home_detect_ball_inhibitore')],
+            condition=UnlessCondition(detect_only),
          )
 
     inhibit_detect_ball_node = Node(
@@ -96,6 +109,7 @@ def generate_launch_description():
 
 
     return LaunchDescription([
+        enable_real_camera_dec,
         params_file_dec,
         detect_only_dec,
         follow_only_dec,
@@ -104,6 +118,7 @@ def generate_launch_description():
         image_topic_dec,
         cmd_vel_topic_dec,
         enable_3d_tracker_dec,
+        camera_node,
         detect_node,
         detect_3d_node,
         follow_node,

@@ -18,7 +18,7 @@ class InhibitorNode(Node):
 
 
         # creat a publishe topic 
-        self.pub_c = self.create_publisher(Point, 'orient_home_ball_detection_inhibitore', 10) # TODO modifie to BallInfo msg
+        self.pub_c = self.create_publisher(Point, 'orient_home_detect_ball_inhibitore', 10) # TODO modifie to BallInfo msg
 
         # Flag to determine if publishing to c is inhibited
         self.inhibit_publish = False 
