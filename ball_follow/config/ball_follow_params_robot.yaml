@@ -5,29 +5,16 @@ detect_ball:
     x_max: 100
     y_min: 0
     y_max: 100
-    # h_min: 35 #30 #38 #25 #28 #30
-    # h_max: 45 #40 #45 #57 #51 #48
-    # s_min: 80 #50 #45 #60
-    # s_max: 255 #100 #255
-    # v_min: 70 #80 #214 #100 #51 #100 #0
-    # v_max: 255
 
-    # Blue Ball range
-    # h_min: 105 #101 
-    # h_max: 119 #110
-    # s_min: 62 #100
-    # s_max: 255
-    # v_min: 59 #90
-    # v_max: 255
-    h_min: 101 
+    h_min: 103 
     h_max: 110
-    s_min: 40 #100
+    s_min: 50
     s_max: 255
-    v_min: 30 #90
+    v_min: 50
     v_max: 255
 
-    sz_min: 3 #0
-    sz_max: 100 #20
+    sz_min: 3
+    sz_max: 100
 
 
 detect_ball_3d:

@@ -99,6 +99,8 @@ class L298N:
             GPIO.cleanup([self.in1, self.in2])
 
 
+
+
 import signal
 import sys
 import spidev
