@@ -49,4 +49,8 @@
 
       <node pkg="obstacle_avoidance" exec="avoid_runaway_suppressor" output="screen" />
 
+      <node pkg="obstacle_avoidance" exec="indicator" output="screen" />
+
+      <node pkg="obstacle_avoidance" exec="locomotion_controller" output="screen" />
+
 </launch>
