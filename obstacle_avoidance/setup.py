@@ -23,6 +23,8 @@ setup(
             'feel_force = obstacle_avoidance.feel_force:main',
             'runaway = obstacle_avoidance.runaway:main',
             'avoid_runaway_suppressor = obstacle_avoidance.avoid_runaway_suppressor:main',
+            'indicator = obstacle_avoidance.indicator:main',
+            'locomotion_controller = obstacle_avoidance.locomotion_controller:main',
         ],
     },
 )

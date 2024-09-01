@@ -41,4 +41,8 @@
       <node pkg="controller_manager" exec="spawner" output="screen" 
           args="joint_broad" />
 
+      <node pkg="obstacle_avoidance" exec="indicator" output="screen" />
+
+      <node pkg="obstacle_avoidance" exec="locomotion_controller" output="screen" />
+
 </launch>
