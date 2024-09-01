@@ -10,15 +10,6 @@ claw_controller:
 
 grab_ball:
   ros__parameters:
-    position_change_threshold: 2  # 0.1/5*100 = 2%
-    position_range_min: 60 # 3/5*100 = 60%
-    position_range_max: 80 # 4/5*100 = 40%
-    
-
-    # old data to determine if ball should be grab
-    # ball_size_min: 0.65
-    # ball_size_max: 0.9
-    # x_min: -1.0 #-0.25
-    # x_max: 1.0 #0.6
-    # y_min: 0.4
-    # y_max: 1.0 #0.65
+    position_change_threshold: 2.0  # 0.1/5*100 = 2%
+    position_range_min: 60.0 # 3/5*100 = 60%
+    position_range_max: 80.0 # 4/5*100 = 40%
