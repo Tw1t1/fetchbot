@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import rclpy
+import math
 from rclpy.node import Node
 from fetchbot_interfaces.msg import Heading, Force
 
@@ -29,17 +30,36 @@ class AvoidNode(Node):
         self.calculate_heading()
 
     def calculate_heading(self):
-        heading = Heading()
+        new_heading = Heading()
 
-        # TODO implement the avoid algorithm
-        # Simple avoid - if there is force bigger then 10 then stop
-        if self.current_force.magnitude > 10:
-            heading.distance = 0.0
-            heading.angle = 0.0
+        # Constants for tuning the avoidance behavior
+        FORCE_THRESHOLD = 33.0
+        MAX_AVOIDANCE_ANGLE = math.pi / 2  # 90 degrees
+
+        if self.current_force.magnitude > FORCE_THRESHOLD:
+            # Calculate avoidance angle
+            avoidance_angle = min(self.current_force.magnitude / FORCE_THRESHOLD, 1.0) * MAX_AVOIDANCE_ANGLE
+
+            # Determine the direction to turn (opposite of the force direction)
+            turn_direction = self.current_force.direction + math.pi
+            
+            # Calculate the new angle by combining the original heading and the avoidance angle
+            new_angle = self.current_heading.angle + avoidance_angle * math.sin(turn_direction - self.current_heading.angle)
+            
+            # Normalize the new angle to be between -pi and pi
+            new_angle = ((new_angle + math.pi) % (2 * math.pi)) - math.pi
+
+            # Reduce speed when avoiding obstacles
+            speed_factor = 1.0 - (self.current_force.magnitude / (2 * FORCE_THRESHOLD))
+            new_speed = max(0.1, self.current_heading.distance * speed_factor)
+
+            new_heading.angle = new_angle
+            new_heading.distance = new_speed
         else:
-            heading = self.current_heading
+            # No significant force detected, maintain the original heading
+            new_heading = self.current_heading
 
-        self.publisher.publish(heading)
+        self.publisher.publish(new_heading)
 
 def main(args=None):
     rclpy.init(args=args)
