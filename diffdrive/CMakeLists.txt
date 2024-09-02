@@ -23,9 +23,9 @@ foreach(Dependency IN ITEMS ${THIS_PACKAGE_INCLUDE_DEPENDS})
   find_package(${Dependency} REQUIRED)
 endforeach()
 
-# Specify the bcm2835 include and library directories
-set(BCM2835_INCLUDE_DIR "/usr/local/include")
-set(BCM2835_LIBRARY "/usr/local/lib/libbcm2835.a")
+# Find libgpiod
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(LIBGPIOD REQUIRED libgpiod)
 
 ## COMPILE
 add_library(
@@ -37,10 +37,12 @@ target_compile_features(diffdrive PUBLIC cxx_std_17)
 target_include_directories(diffdrive PUBLIC
   $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/hardware/include>
   $<INSTALL_INTERFACE:include/diffdrive>
-  ${BCM2835_INCLUDE_DIR}  # Include bcm2835 headers
+  ${LIBGPIOD_INCLUDE_DIRS}
 )
 target_link_libraries(diffdrive PUBLIC
-  ${BCM2835_LIBRARY}  # Link against bcm2835 library
+  ${LIBGPIOD_LIBRARIES}
+  gpiod
+  gpiodcxx
 )
 
 ament_target_dependencies(
@@ -56,7 +58,6 @@ install(
   DIRECTORY hardware/include/
   DESTINATION include/diffdrive
 )
-
 
 install(TARGETS diffdrive
   EXPORT export_diffdrive
