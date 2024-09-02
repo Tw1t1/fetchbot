@@ -5,7 +5,7 @@ from rclpy.node import Node
 from sensor_msgs.msg import Image
 from geometry_msgs.msg import Point
 from cv_bridge import CvBridge
-from ball_follow.my_proc_image import BallDetector
+from ball_follow.process_image import BallDetector
 
 
 
@@ -92,7 +92,7 @@ class DetectBall(Node):
             if (point_out.z > 0):
                 self.ball_pub.publish(point_out)
                 # only for debugging and testing
-                self.get_logger().info(f"Ball detected: ({point_out.x}, {point_out.y}),  {point_out.z}")
+                # self.get_logger().info(f"Ball detected: ({point_out.x}, {point_out.y}),  {point_out.z}")
         except Exception as e:
             self.get_logger().error(e)
 

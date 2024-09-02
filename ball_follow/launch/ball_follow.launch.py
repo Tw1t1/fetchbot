@@ -14,7 +14,7 @@ def generate_launch_description():
     params_file = LaunchConfiguration('params_file')
     params_file_dec = DeclareLaunchArgument(
         'params_file',
-        default_value=os.path.join(get_package_share_directory('ball_follow'),'config','ball_follow_params_robot.yaml'),
+        default_value=os.path.join(get_package_share_directory('ball_follow'),'config','ball_follow_params_example.yaml'),
         description='Full path to params file for all ball_follow nodes.')
 
     detect_only = LaunchConfiguration('detect_only')
@@ -104,9 +104,8 @@ def generate_launch_description():
     inhibit_follow_ball_node = Node(
             package='ball_follow',
             executable='grab_ball_follow_ball_inhibitore',
+            remappings=[('grab_ball_follow_ball_inhibitore', '/diff_cont/cmd_vel_unstamped')]
          )
-
-
 
     return LaunchDescription([
         enable_real_camera_dec,

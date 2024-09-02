@@ -21,6 +21,7 @@ class FollowerStatus(Enum):
     FOLLOWING = 1
     SEARCHING = 2
     UNREACHABLE = 3
+    ARRIVED = 4
     
 
 class FollowBall(Node):
@@ -57,10 +58,6 @@ class FollowBall(Node):
         if current_time - self.lastrcvtime >= self.rcv_timeout_secs:
             if self.ball_detected:
                 # Ball was previously detected but now lost
-                if self.search_start_time is None:
-                    # This is the first time we're starting to search
-                    self.search_start_time = current_time
-                    self.total_rotation = 0.0
                 # Transition to the SEARCHING state to look for the ball
                 self.state_machine.transition_to(FollowerStatus.SEARCHING)
             else:
@@ -79,15 +76,14 @@ class FollowBall(Node):
         self.target_dist = self.target_dist * f + msg.z * (1-f)
         self.lastrcvtime = time.time()
         self.ball_detected = True
-
+        
         if self.is_ball_unchanged(msg):
             self.state_machine.transition_to(FollowerStatus.UNREACHABLE)
-        # elif self.state_machine.get_current_state() == FollowerStatus.UNREACHABLE:
         else:
             self.state_machine.transition_to(FollowerStatus.FOLLOWING)
 
         # only for debugging and testing
-        self.get_logger().info(f'Received Point: ({msg.x}, {msg.y}) ball size: {msg.z}')
+        # self.get_logger().info(f'Received Point: ({msg.x}, {msg.y}) ball size: {msg.z}')
 
 
     def is_ball_unchanged(self, current_ball_data):
@@ -118,23 +114,18 @@ class FollowBall(Node):
 
         return False
 
-    def broadcast_current_status(self):
-        """
-        Publish the current status of the ball follower.
-        """
-        status_msg = String(data=self.state_machine.get_current_state().name)
-        self.status_publisher.publish(status_msg)
+    def on_following(self):
+        msg = Twist()
 
+        self.search_start_time = None
 
-
-    def setup_state_machine(self):
-        state_actions = {
-            FollowerStatus.WAITING: self.on_waiting,
-            FollowerStatus.FOLLOWING: self.on_following,
-            FollowerStatus.SEARCHING: self.on_searching,
-            FollowerStatus.UNREACHABLE: self.on_unreachable
-        }
-        self.state_machine = StateMachine(FollowerStatus.WAITING, state_actions)
+        if self.target_dist < self.max_size_thresh:
+            msg.linear.x = self.forward_chase_speed
+        msg.angular.z = -self.angular_chase_multiplier * self.target_val
+        
+        self.publisher_.publish(msg)
+        # only for debugging and testing
+        # self.get_logger().info(f'Heading published, x: {msg.linear.x}, z: {msg.angular.z}')
 
 
     def on_waiting(self):
@@ -142,33 +133,29 @@ class FollowBall(Node):
         pass
 
 
-    def on_following(self):
-        msg = Twist()
-        if self.target_dist < self.max_size_thresh:
-            msg.linear.x = self.forward_chase_speed
-        msg.angular.z = -self.angular_chase_multiplier * self.target_val
-        
-        self.publisher_.publish(msg)
-        # only for debugging and testing
-        self.get_logger().info(f'Heading published, x: {msg.linear.x}, z: {msg.angular.z}')
-
-
     def on_searching(self):
         msg = Twist()
         current_time = time.time()
-        rotation_needed = 2*pi * self.search_rotations
-        time_passed = current_time - self.search_start_time
-        self.total_rotation = abs(self.search_angular_speed * time_passed)
 
-        if self.total_rotation < rotation_needed:
+        if self.search_start_time is None:
+            # This is the first time we're starting to search
+            self.search_start_time = current_time
+        
+
+        correction_factor = 3.2
+        rotation_duration = correction_factor*((2*pi*self.search_rotations)/self.search_angular_speed)
+
+        time_passed = current_time - self.search_start_time
+        if rotation_duration > time_passed:
             msg.angular.z = self.search_angular_speed
         else:
-            self.state_machine.transition_to(FollowerStatus.WAITING)
             self.ball_detected = False
+            self.search_start_time = None
         
         self.publisher_.publish(msg)
+        
         # only for debugging and testing
-        self.get_logger().info(f'Heading published, x: {msg.linear.x}, z: {msg.angular.z}')
+        # self.get_logger().info(f'Heading published, x: {msg.linear.x}, z: {msg.angular.z}')
 
     def on_unreachable(self):
         # right now do nothing, in futer may can upload some specifiec behavior
@@ -184,7 +171,6 @@ class FollowBall(Node):
         # Variables for search behavior
         self.ball_detected = False
         self.search_start_time = None
-        self.total_rotation = 0.0
 
         # Variables for unchange ball data
         self.last_ball_data = None
@@ -216,6 +202,21 @@ class FollowBall(Node):
         self.size_threshold = self.get_parameter('size_threshold').get_parameter_value().double_value
         self.unchanged_time_threshold = self.get_parameter('unchanged_time_threshold').get_parameter_value().double_value
 
+    def broadcast_current_status(self):
+        """
+        Publish the current status of the ball follower.
+        """
+        status_msg = String(data=self.state_machine.get_current_state().name)
+        self.status_publisher.publish(status_msg)
+
+    def setup_state_machine(self):
+        state_actions = {
+            FollowerStatus.WAITING: self.on_waiting,
+            FollowerStatus.FOLLOWING: self.on_following,
+            FollowerStatus.SEARCHING: self.on_searching,
+            FollowerStatus.UNREACHABLE: self.on_unreachable
+        }
+        self.state_machine = StateMachine(FollowerStatus.WAITING, state_actions)
 
 
 def main(args=None):
