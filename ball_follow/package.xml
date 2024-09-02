@@ -14,6 +14,8 @@
 
   <depend>libopencv-dev</depend>
   <depend>python3-numpy</depend>
+  <depend>fetchbot_interfaces</depend>
+
 
   <build_depend>cv_bridge</build_depend>
   <build_depend>image_transport</build_depend>

@@ -3,12 +3,12 @@
 
 import rclpy
 from rclpy.node import Node
-from geometry_msgs.msg import Point, Twist
 from std_msgs.msg import String
 import time
 from math import pi
 from enum import Enum
 from ball_follow.state_machine import StateMachine
+from fetchbot_interfaces.msg import Heading, BallInfo
 
 
 # """
@@ -25,15 +25,14 @@ class FollowerStatus(Enum):
     
 
 class FollowBall(Node):
-
     def __init__(self):
         super().__init__('follow_ball')
 
         self.subscription = self.create_subscription(
-            Point, '/detected_ball', self.process_ball_detection, 10)
+            BallInfo, '/detected_ball', self.process_ball_detection, 10)
         
         self.publisher_ = self.create_publisher(
-            Twist, '/follow_ball', 10)
+            Heading, '/follow_ball', 10)
         
         self.status_publisher = self.create_publisher(
             String, '/follow_ball/status', 10)
@@ -72,8 +71,8 @@ class FollowBall(Node):
         Process incoming ball detection data and update target information.
         """
         f = self.filter_value
-        self.target_val = self.target_val * f + msg.x * (1-f)
-        self.target_dist = self.target_dist * f + msg.z * (1-f)
+        self.target_val = self.target_val * f + msg.pos_x * (1-f)
+        self.target_dist = self.target_dist * f + msg.size * (1-f)
         self.lastrcvtime = time.time()
         self.ball_detected = True
         
@@ -83,7 +82,7 @@ class FollowBall(Node):
             self.state_machine.transition_to(FollowerStatus.FOLLOWING)
 
         # only for debugging and testing
-        # self.get_logger().info(f'Received Point: ({msg.x}, {msg.y}) ball size: {msg.z}')
+        # self.get_logger().info(f'Received Point: ({msg.pos_x}, {msg.pos_y}) ball size: {msg.size}')
 
 
     def is_ball_unchanged(self, current_ball_data):
@@ -97,9 +96,9 @@ class FollowBall(Node):
             return False
 
         # Check x, y and size change
-        x_change = abs(current_ball_data.x - self.last_ball_data.x) <= self.position_threshold
-        y_change = abs(current_ball_data.y - self.last_ball_data.y) <= self.position_threshold
-        size_change = abs(current_ball_data.z - self.last_ball_data.z) <= self.size_threshold
+        x_change = abs(current_ball_data.pos_x - self.last_ball_data.pos_x) <= self.position_threshold
+        y_change = abs(current_ball_data.pos_y - self.last_ball_data.pos_y) <= self.position_threshold
+        size_change = abs(current_ball_data.size - self.last_ball_data.size) <= self.size_threshold
 
         if (x_change and y_change and size_change) :
             # Ball hasn't changed significantly
@@ -114,18 +113,22 @@ class FollowBall(Node):
 
         return False
 
+
     def on_following(self):
-        msg = Twist()
+        # msg = Twist()
+        msg = Heading()
 
         self.search_start_time = None
 
         if self.target_dist < self.max_size_thresh:
-            msg.linear.x = self.forward_chase_speed
-        msg.angular.z = -self.angular_chase_multiplier * self.target_val
+            # msg.linear.x = self.forward_chase_speed
+            msg.distance = self.forward_chase_speed
+        # msg.angular.z = -self.angular_chase_multiplier * self.target_val
+        msg.angle = -self.angular_chase_multiplier * self.target_val
         
         self.publisher_.publish(msg)
         # only for debugging and testing
-        # self.get_logger().info(f'Heading published, x: {msg.linear.x}, z: {msg.angular.z}')
+        # self.get_logger().info(f'Heading published, x: {msg.distance}, z: {msg.angle}')
 
 
     def on_waiting(self):
@@ -134,7 +137,8 @@ class FollowBall(Node):
 
 
     def on_searching(self):
-        msg = Twist()
+        # msg = Twist()
+        msg = Heading()
         current_time = time.time()
 
         if self.search_start_time is None:
@@ -147,7 +151,8 @@ class FollowBall(Node):
 
         time_passed = current_time - self.search_start_time
         if rotation_duration > time_passed:
-            msg.angular.z = self.search_angular_speed
+            # msg.angular.z = self.search_angular_speed
+            msg.angle = self.search_angular_speed
         else:
             self.ball_detected = False
             self.search_start_time = None
@@ -155,7 +160,7 @@ class FollowBall(Node):
         self.publisher_.publish(msg)
         
         # only for debugging and testing
-        # self.get_logger().info(f'Heading published, x: {msg.linear.x}, z: {msg.angular.z}')
+        # self.get_logger().info(f'Heading published, x: {msg.distance}, z: {msg.angle}')
 
     def on_unreachable(self):
         # right now do nothing, in futer may can upload some specifiec behavior

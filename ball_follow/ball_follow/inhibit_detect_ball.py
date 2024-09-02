@@ -1,51 +1,37 @@
-#!/usr/bin/env python3
-
 import rclpy
 from rclpy.node import Node
-from geometry_msgs.msg import Point # TODO modifie to Ball_Info msg
-from std_msgs.msg import Bool # TODO modifie to Bool msg
+from fetchbot_interfaces.msg import BallInfo
+from std_msgs.msg import String
 import time
 
 
 class InhibitorNode(Node):
-    
     def __init__(self):
         super().__init__('ball_detection_inhibitor')
         
         # Subscribe to topic_a and topic_b with specified message type
-        self.sub_a = self.create_subscription(Point, '/detected_ball', self.callback_a, 10) # TODO modifie to BallInfo msg
-        self.sub_b = self.create_subscription(Bool, '/orient_home/returning_home', self.callback_b, 10) # TODO modifie to BOOL msg
-
+        self.sub_a = self.create_subscription(BallInfo, '/detected_ball', self.callback_a, 10)
+        self.sub_b = self.create_subscription(String, '/orient_home/returning_home', self.callback_b, 10)
 
         # creat a publishe topic 
-        self.pub_c = self.create_publisher(Point, 'orient_home_detect_ball_inhibitore', 10) # TODO modifie to BallInfo msg
+        self.pub_c = self.create_publisher(BallInfo, 'orient_home_detect_ball_inhibitore', 10)
 
         # Flag to determine if publishing to c is inhibited
         self.inhibit_publish = False 
-        self.rcv_timeout_secs = 1.0
-        self.lastrcvtime = time.time() - 10000
-
 
     def callback_a(self, msg):
-        # Publish the message from topic_a to topic_c if not inhibited and within timeout
-        current_time = time.time()
-        if not self.inhibit_publish: #and (current_time - self.lastrcvtime < self.rcv_timeout_secs):
+        if not self.inhibit_publish:
             self.pub_c.publish(msg)
         
-
-
-
     def callback_b(self, msg):
         self.lastrcvtime = time.time()
-        self.inhibit_publish = msg.data
+        # self.inhibit_publish = msg.data != "SOME MSG"
+        self.inhibit_publish = False
         
     def cleanup(self):
         self.get_logger().info('Node shutting down...')
 
 def main(args=None):
-    """
-    Main function to initialize and run the node.
-    """
     rclpy.init(args=args)
     inhibitor_node = InhibitorNode()
     try:

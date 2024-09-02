@@ -2,7 +2,7 @@ import numpy as np
 import rclpy
 from rclpy.node import Node
 from std_msgs.msg import String, Float64
-from geometry_msgs.msg import Point
+from fetchbot_interfaces.msg import BallInfo
 from enum import Enum
 import time
 import joblib
@@ -19,7 +19,7 @@ class GrabBall(Node):
         super().__init__('grab_ball')
 
         self.position_sub = self.create_subscription(Float64, 'position', self.position_callback, 10)
-        self.ball_info_sub = self.create_subscription(Point, '/detected_ball', self.ball_info_callback, 10)
+        self.ball_info_sub = self.create_subscription(BallInfo, '/detected_ball', self.ball_info_callback, 10)
         self.grab_ball_status_pub = self.create_publisher(String, 'grab_ball/status', 10)
         self.claw_cmd_pub = self.create_publisher(String, 'claw_cmd', 10)
 
@@ -152,7 +152,7 @@ class GrabBall(Node):
 
     def predict_distance(self, ball_info):
         # Use the pre-trained models to predict the distance to the ball and if it's graspable
-        features = np.array([[ball_info.z, ball_info.x, ball_info.y]])
+        features = np.array([[ball_info.size, ball_info.pos_x, ball_info.pos_y]])
 
         estimated_distance = self.rf_model.predict(features)[0]
         is_graspable = self.binary_model.predict(features)[0]
