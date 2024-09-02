@@ -92,8 +92,8 @@ class DetectBall(Node):
 
             if (max_kp.size > 0):
                 point_out = BallInfo()
-                point_out.x_pos = max_kp.pt[0]
-                point_out.y_pos = max_kp.pt[1]
+                point_out.pos_x = max_kp.pt[0]
+                point_out.pos_y = max_kp.pt[1]
                 point_out.size = max_kp.size
                 self.ball_pub.publish(point_out)
                 # only for debugging and testing
