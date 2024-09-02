@@ -1,6 +1,7 @@
 import rclpy
 from rclpy.node import Node
 from fetchbot_interfaces.msg import Heading
+from geometry_msgs.msg import Twist     #TODO: remove this import
 from std_msgs.msg import String 
 import time
 
@@ -14,15 +15,24 @@ class InhibitorNode(Node):
         self.sub_b = self.create_subscription(String, '/grab_ball/status', self.callback_b, 10)
 
         # creat a publishe topic to publish msg from sub_a
-        self.pub_c = self.create_publisher(Heading, 'grab_ball_follow_ball_inhibitore', 10) 
+        # self.pub_c = self.create_publisher(Heading, 'grab_ball_follow_ball_inhibitore', 10) 
+        self.pub_c = self.create_publisher(Twist, '/diff_cont/cmd_vel_unstamped', 10)  #TODO: remove this publisher and uncomment the one above
 
         # Flag to determine if publishing to c is inhibited
         self.inhibit_publish = False
 
+    #TODO: remove this function
+    def convert_heading_to_twist(self, heading):
+        twist = Twist()
+        twist.linear.x = heading.distance
+        twist.angular.z = heading.angle
+        return twist
+
     def callback_a(self, msg):
         # Publish the message from topic_a to topic_c if not inhibited by topic_b and within timeout
         if not self.inhibit_publish:
-            self.pub_c.publish(msg)
+            # self.pub_c.publish(msg)
+            self.pub_c.publish(self.convert_heading_to_twist(msg)) #TODO: remove this line and uncomment the one above
 
     def callback_b(self, msg):
         self.lastrcvtime = time.time()

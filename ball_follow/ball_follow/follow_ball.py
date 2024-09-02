@@ -146,7 +146,7 @@ class FollowBall(Node):
             self.search_start_time = current_time
         
 
-        correction_factor = 3.2
+        correction_factor = 1.6
         rotation_duration = correction_factor*((2*pi*self.search_rotations)/self.search_angular_speed)
 
         time_passed = current_time - self.search_start_time
