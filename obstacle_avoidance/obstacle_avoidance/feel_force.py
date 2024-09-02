@@ -4,58 +4,128 @@ import math
 import numpy as np
 from rclpy.node import Node
 from sensor_msgs.msg import LaserScan
-from fetchbot_interfaces.msg import Force
-
+from fetchbot_interfaces.msg import Force, Collision
+from rclpy.time import Time
 
 class FeelForceNode(Node):
     def __init__(self):
         super().__init__("feel_force")
-        self.subscription = self.create_subscription(
+        self.subscription_scan = self.create_subscription(
             LaserScan,
             '/scan',
             self.scan_callback,
             10)
+        self.subscription_collision = self.create_subscription(
+            Collision,
+            'collision',
+            self.collision_callback,
+            10)
         self.publisher = self.create_publisher(Force, 'force', 10)
+        
+        self.latest_scan = None
+        self.latest_collision = None
+        self.scan_timestamp = None
+        self.collision_timestamp = None
+        self.bumper_force_magnitude = 1000.0  # Adjust this value as needed
+        
+        # Set timeouts (in seconds)
+        self.scan_timeout = 1.0
+        self.collision_timeout = 0.5
+        
+        # Create a timer to periodically check and publish force
+        self.timer = self.create_timer(0.1, self.timer_callback)  # 10 Hz
 
-    # Callback function for the scan topic
     def scan_callback(self, msg):
-        force_vector = self.calculate_force(msg)
-        self.publisher.publish(force_vector)
+        self.latest_scan = msg
+        self.scan_timestamp = self.get_clock().now()
 
-    # Calculate the force vector
-    def calculate_force(self, scan):
+    def collision_callback(self, msg):
+        self.latest_collision = msg
+        self.collision_timestamp = self.get_clock().now()
+
+    def timer_callback(self):
+        self.calculate_and_publish_force()
+
+    def calculate_and_publish_force(self):
+        current_time = self.get_clock().now()
+        
+        laser_force = None
+        if self.latest_scan and self.scan_timestamp:
+            if (current_time - self.scan_timestamp).nanoseconds / 1e9 < self.scan_timeout:
+                laser_force = self.calculate_laser_force()
+            else:
+                self.latest_scan = None
+                self.scan_timestamp = None
+        
+        bumper_force = None
+        if self.latest_collision and self.collision_timestamp:
+            if (current_time - self.collision_timestamp).nanoseconds / 1e9 < self.collision_timeout:
+                bumper_force = self.calculate_bumper_force()
+            else:
+                self.latest_collision = None
+                self.collision_timestamp = None
+
+        if laser_force and bumper_force:
+            final_force = self.combine_forces(laser_force, bumper_force)
+        elif laser_force:
+            final_force = laser_force
+        elif bumper_force:
+            final_force = bumper_force
+        else:
+            return  # No valid data to publish
+
+        self.publisher.publish(final_force)
+
+def calculate_laser_force(self):
+        scan = self.latest_scan
         ranges = np.array(scan.ranges)
         angles = np.linspace(scan.angle_min, scan.angle_max, len(ranges))
         
-        # Filter valid ranges
         valid_indices = np.where((ranges >= scan.range_min) & (ranges <= scan.range_max))
         valid_ranges = ranges[valid_indices]
         valid_angles = angles[valid_indices]
 
-        # Scale the valid ranges
-        scale_ranges = valid_ranges * 2     # Scale by 2, adjust as needed
-
-        # Inverse cube scaling
+        scale_ranges = valid_ranges * 2
         inverse_cube_scale_ranges = 1 / (scale_ranges ** 3)
 
-        # Calculate the forces in x and y directions
         forces_x = np.cos(valid_angles) * inverse_cube_scale_ranges
         forces_y = np.sin(valid_angles) * inverse_cube_scale_ranges
 
-        # Calculate the net force
         net_force_x = np.sum(forces_x)
         net_force_y = np.sum(forces_y)
 
-        # Calculate the magnitude and angle of the net force
-        magnitude = math.sqrt(net_force_x**2 + net_force_y**2)  # Calculate the magnitude
-        angle = math.atan2(net_force_y, net_force_x) # Calculate the angle in radians
+        magnitude = math.sqrt(net_force_x**2 + net_force_y**2)
+        angle = math.atan2(net_force_y, net_force_x)
 
-        # Create a FeelForce message
         force = Force()
         force.magnitude = magnitude
         force.direction = angle
 
         return force
+
+    def calculate_bumper_force(self):
+        force = Force()
+        force.magnitude = self.bumper_force_magnitude
+        force.direction = math.radians(self.latest_collision.angle)  # Convert to radians if needed
+        return force
+
+    def combine_forces(self, laser_force, bumper_force):
+        # Convert polar to Cartesian
+        laser_x = laser_force.magnitude * math.cos(laser_force.direction)
+        laser_y = laser_force.magnitude * math.sin(laser_force.direction)
+        bumper_x = bumper_force.magnitude * math.cos(bumper_force.direction)
+        bumper_y = bumper_force.magnitude * math.sin(bumper_force.direction)
+
+        # Sum the forces
+        total_x = laser_x + bumper_x
+        total_y = laser_y + bumper_y
+
+        # Convert back to polar
+        combined_force = Force()
+        combined_force.magnitude = math.sqrt(total_x**2 + total_y**2)
+        combined_force.direction = math.atan2(total_y, total_x)
+
+        return combined_force
 
 
 def main(args=None):
@@ -69,7 +139,6 @@ def main(args=None):
         if rclpy.ok():
             feel_force_node.destroy_node()
             rclpy.shutdown()
- 
- 
+
 if __name__ == "__main__":
     main()

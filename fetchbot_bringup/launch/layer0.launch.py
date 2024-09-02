@@ -103,7 +103,7 @@ def generate_launch_description():
         output='screen'
     )
 
-    
+    # layer 0 - obstacle avoidance
     feel_force = Node(
         package='obstacle_avoidance',
         executable='feel_force',
@@ -111,10 +111,38 @@ def generate_launch_description():
         output='screen'
     )
 
-    run_away = Node(
+    runaway = Node(
         package='obstacle_avoidance',
-        executable='run_away',
-        name='run_away',
+        executable='runaway',
+        name='runaway',
+        output='screen'
+    )
+
+    avoid_runaway_suppressor = Node(
+        package='obstacle_avoidance',
+        executable='avoid_runaway_suppressor',
+        name='avoid_runaway_suppressor',
+        output='screen'
+    )
+
+    indicator = Node(
+        package='obstacle_avoidance',
+        executable='indicator',
+        name='indicator',
+        output='screen'
+    )
+
+    locomotion_controller = Node(
+        package='obstacle_avoidance',
+        executable='locomotion_controller',
+        name='locomotion_controller',
+        output='screen'
+    )
+
+    bumper = Node(
+        package='obstacle_avoidance',
+        executable='bumper',
+        name='bumper',
         output='screen'
     )
 
@@ -141,7 +169,11 @@ def generate_launch_description():
         robot_controller_spawner,
         sllidar_a1,
         feel_force,
-        run_away,
+        runaway,
+        avoid_runaway_suppressor,
+        indicator,
+        locomotion_controller,
+        bumper,
         delay_rviz_after_joint_state_broadcaster_spawner,
         delay_joint_state_broadcaster_after_robot_controller_spawner,
     ]

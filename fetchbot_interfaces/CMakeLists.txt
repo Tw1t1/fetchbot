@@ -14,6 +14,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/BallInfo.msg"
   "msg/Force.msg"
   "msg/Heading.msg"
+  "msg/Collision.msg"
 )
 
 ament_export_dependencies(rosidl_default_runtime)

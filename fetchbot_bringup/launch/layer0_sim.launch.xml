@@ -53,4 +53,6 @@
 
       <node pkg="obstacle_avoidance" exec="locomotion_controller" output="screen" />
 
+      <node pkg="obstacle_avoidance" exec="bumper" output="screen" />
+
 </launch>

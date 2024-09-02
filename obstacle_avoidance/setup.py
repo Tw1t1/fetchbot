@@ -25,6 +25,7 @@ setup(
             'avoid_runaway_suppressor = obstacle_avoidance.avoid_runaway_suppressor:main',
             'indicator = obstacle_avoidance.indicator:main',
             'locomotion_controller = obstacle_avoidance.locomotion_controller:main',
+            'bumper = obstacle_avoidance.bumper:main',
         ],
     },
 )

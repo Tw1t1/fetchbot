@@ -1,7 +1,7 @@
 import rclpy
 from rclpy.node import Node
 from fetchbot_interfaces.msg import Heading
-from geometry_msgs.msg import Twist
+from geometry_msgs.msg import TwistStamped
 
 
 class LocomotionControllerNode(Node):
@@ -12,18 +12,18 @@ class LocomotionControllerNode(Node):
             'avoid_runaway_suppressor',
             self.heading_callback,
             10)
-        self.publisher = self.create_publisher(Twist, 'diff_cont/cmd_vel_unstamped', 10)
+        self.publisher = self.create_publisher(TwistStamped, 'cmd_vel', 10)
 
     def heading_callback(self, msg):
-        twist = self.calculate_twist(msg)
-        self.publisher.publish(twist)
+        twist_stamped = self.calculate_twist_stamped(msg)
+        self.publisher.publish(twist_stamped)
 
-    def calculate_twist(self, heading):
-        twist = Twist()
+    def calculate_twist_stamped(self, heading):
+        twist_stamped = TwistStamped()
         # TODO - update the twist calculation so that the velocity is proportional to the distance and angle
-        twist.linear.x = heading.distance
-        twist.angular.z = heading.angle
-        return twist
+        twist_stamped.twist.linear.x = heading.distance
+        twist_stamped.twist.angular.z = heading.angle
+        return twist_stamped
 
 
 def main(args=None):

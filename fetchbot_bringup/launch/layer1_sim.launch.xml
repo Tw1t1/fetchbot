@@ -53,6 +53,8 @@
 
       <node pkg="obstacle_avoidance" exec="locomotion_controller" output="screen" />
 
+      <node pkg="obstacle_avoidance" exec="bumper" output="screen" />
+
       <!-- layer 1 - wander -->
 
       <node pkg="wander" exec="wander" name="wander" output="screen"/>
