@@ -26,7 +26,6 @@ class FeelForceNode(Node):
         self.latest_collision = None
         self.scan_timestamp = None
         self.collision_timestamp = None
-        self.bumper_force_magnitude = 1000.0  # Adjust this value as needed
         
         # Set timeouts (in seconds)
         self.scan_timeout = 1.0
@@ -86,7 +85,7 @@ class FeelForceNode(Node):
         valid_angles = angles[valid_indices]
 
         scale_ranges = valid_ranges * 2
-        inverse_cube_scale_ranges = 1 / (scale_ranges ** 3)
+        inverse_cube_scale_ranges = 1 / (scale_ranges ** 5)
 
         forces_x = np.cos(valid_angles) * inverse_cube_scale_ranges
         forces_y = np.sin(valid_angles) * inverse_cube_scale_ranges
@@ -105,8 +104,9 @@ class FeelForceNode(Node):
 
     def calculate_bumper_force(self):
         force = Force()
-        force.magnitude = self.bumper_force_magnitude
-        force.direction = math.radians(self.latest_collision.angle)  # Convert to radians if needed
+        inverse_cube_scale_range = 1 / (self.latest_collision.range ** 3)
+        force.magnitude = inverse_cube_scale_range
+        force.direction = self.latest_collision.angle
         return force
 
     def combine_forces(self, laser_force, bumper_force):
