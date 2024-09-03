@@ -51,6 +51,9 @@ def generate_launch_description():
         [FindPackageShare("fetchbot_bringup"), "rviz", "urdf_config.rviz"]
     )
 
+    obstacle_avoidance_params_file = PathJoinSubstitution([FindPackageShare("obstacle_avoidance"), "config", "obstacle_avoidance_params.yaml"])
+
+
     control_node = Node(
         package="controller_manager",
         executable="ros2_control_node",
@@ -143,7 +146,8 @@ def generate_launch_description():
         package='obstacle_avoidance',
         executable='bumper',
         name='bumper',
-        output='screen'
+        output='screen',
+        parameters=[obstacle_avoidance_params_file]
     )
 
     # layer 1 - wander

@@ -10,10 +10,10 @@ class BumperNode(Node):
         
         # Set up GPIO
         GPIO.setmode(GPIO.BCM)
-        self.LEFT_BUMPER_PIN = 4
-        self.RIGHT_BUMPER_PIN = 18
-        GPIO.setup(self.LEFT_BUMPER_PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-        GPIO.setup(self.RIGHT_BUMPER_PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+        self.left_bumper_pin = 4
+        self.right_bumper_pin = 18
+        GPIO.setup(self.left_bumper_pin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+        GPIO.setup(self.right_bumper_pin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
         
         # Create publisher for the collision topic
         self.collision_pub = self.create_publisher(Collision, 'collision', 10)
@@ -22,34 +22,38 @@ class BumperNode(Node):
         self.timer = self.create_timer(0.1, self.timer_callback)  # 10 Hz
         
         # Define angles
-        self.LEFT_ANGLE = 315.0
-        self.RIGHT_ANGLE = 45.0
-        self.BOTH_ANGLE = 0.0
+        self.left_angle = 2.35
+        self.right_angle = -2.35
+        self.rear_angle = 3.14
+
+        # Define the range
+        self.right_range = 0.5
+        self.left_range = 0.5
 
     def read_bumper_sensors(self):
         # Read the state of both bumper sensors
         # GPIO.input returns 0 if pressed (circuit closed), 1 if not pressed
-        left_bumper_pressed = not GPIO.input(self.LEFT_BUMPER_PIN)
-        right_bumper_pressed = not GPIO.input(self.RIGHT_BUMPER_PIN)
+        left_bumper_pressed = not GPIO.input(self.left_bumper_pin)
+        right_bumper_pressed = not GPIO.input(self.right_bumper_pin)
         return left_bumper_pressed, right_bumper_pressed
 
     def calculate_collision_angle(self, left_pressed, right_pressed):
         if left_pressed and right_pressed:
-            return self.BOTH_ANGLE
+            return self.rear_angle, min(self.left_range, self.right_range)
         elif left_pressed:
-            return self.LEFT_ANGLE
+            return self.left_angle, self.left_range
         elif right_pressed:
-            return self.RIGHT_ANGLE
+            return self.right_angle, self.right_range
         else:
             return None  # No collision
 
     def timer_callback(self):
         left_pressed, right_pressed = self.read_bumper_sensors()
-        collision_angle = self.calculate_collision_angle(left_pressed, right_pressed)
+        collision_angle, collision_range = self.calculate_collision_angle(left_pressed, right_pressed)
         
         if collision_angle is not None:
             collision_msg = Collision()
-            collision_msg.angle = float(collision_angle)
+            collision_msg.angle, collision_msg.range = float(collision_angle), float(collision_range)
             self.collision_pub.publish(collision_msg)
 
     def __del__(self):
