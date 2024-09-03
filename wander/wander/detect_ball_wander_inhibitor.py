@@ -1,13 +1,13 @@
 import rclpy
 from fetchbot_interfaces.msg import Heading, BallInfo
-from suppressor_inhibitor.suppressor import SuppressorNode
+from suppressor_inhibitor.inhibitor import InhibitorNode
 
 def main(args=None):
     rclpy.init(args=args)
-    detect_ball_wander_inhibitor_node = SuppressorNode(
+    detect_ball_wander_inhibitor_node = InhibitorNode(
         name ='avoid_runaway_suppressor',
         sub1_msg_type = BallInfo,
-        sub1_topic_name = 'orient_home_detect_ball_inhibitore',
+        sub1_topic_name = 'orient_home_detect_ball_inhibitor',
         sub2_msg_type = Heading,
         sub2_topic_name = 'wander',
         pub_msg_type = Heading,

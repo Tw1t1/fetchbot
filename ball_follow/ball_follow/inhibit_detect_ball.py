@@ -14,7 +14,7 @@ class InhibitorNode(Node):
         self.sub_b = self.create_subscription(String, '/orient_home/returning_home', self.callback_b, 10)
 
         # creat a publishe topic 
-        self.pub_c = self.create_publisher(BallInfo, 'orient_home_detect_ball_inhibitore', 10)
+        self.pub_c = self.create_publisher(BallInfo, 'orient_home_detect_ball_inhibitor', 10)
 
         # Flag to determine if publishing to c is inhibited
         self.inhibit_publish = False 

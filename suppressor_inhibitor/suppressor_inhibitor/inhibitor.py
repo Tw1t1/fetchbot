@@ -22,7 +22,7 @@ class InhibitorNode(Node):
         self.delay = delay
         self.publish_function = publish_function
 
-    def subscriber1_callback(self):
+    def subscriber1_callback(self, msg):
         self.subscriber1_timer = time.time()
 
     def subscriber2_callback(self, msg):

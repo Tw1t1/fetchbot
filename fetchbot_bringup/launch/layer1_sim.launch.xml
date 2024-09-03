@@ -7,7 +7,7 @@
       <let name="rviz_config_path"
             value="$(find-pkg-share fetchbot_bringup)/rviz/urdf_config.rviz" />
       <let name="gazebo_world_path"
-            value="$(find-pkg-share fetchbot_bringup)/worlds/obstacles.world" />
+            value="$(find-pkg-share fetchbot_bringup)/worlds/room.world" />
       <let name="gazebo_params_file"
             value="$(find-pkg-share fetchbot_description)/config/gazebo_params.yaml" />      
 
@@ -49,11 +49,11 @@
 
       <node pkg="obstacle_avoidance" exec="avoid_runaway_suppressor" output="screen" />
 
-      <node pkg="obstacle_avoidance" exec="indicator" output="screen" />
+      <!-- <node pkg="obstacle_avoidance" exec="indicator" output="screen" /> -->
 
       <node pkg="obstacle_avoidance" exec="locomotion_controller" output="screen" />
 
-      <node pkg="obstacle_avoidance" exec="bumper" output="screen" />
+      <!-- <node pkg="obstacle_avoidance" exec="bumper" output="screen" /> -->
 
       <!-- layer 1 - wander -->
 

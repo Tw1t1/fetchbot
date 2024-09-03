@@ -76,7 +76,7 @@ class FeelForceNode(Node):
 
         self.publisher.publish(final_force)
 
-def calculate_laser_force(self):
+    def calculate_laser_force(self):
         scan = self.latest_scan
         ranges = np.array(scan.ranges)
         angles = np.linspace(scan.angle_min, scan.angle_max, len(ranges))
