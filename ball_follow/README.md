@@ -16,7 +16,7 @@ The layer consists of four main modules:
 
 ## Prerequisites
 
-- ROS 2 (tested with Foxy Fitzroy)
+- ROS 2 (Humble)
 - Python 3.8+
 - OpenCV
 - NumPy
