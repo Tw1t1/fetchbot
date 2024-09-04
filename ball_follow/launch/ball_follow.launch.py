@@ -92,18 +92,18 @@ def generate_launch_description():
             package='ball_follow',
             executable='follow_ball',
             parameters=[params_file, {'use_sim_time': use_sim_time}],
-            remappings=[('/detected_ball','/orient_home_detect_ball_inhibitore')],
+            remappings=[('/detected_ball','/orient_home_detect_ball_inhibitor')],
             condition=UnlessCondition(detect_only),
          )
 
     inhibit_detect_ball_node = Node(
             package='ball_follow',
-            executable='orient_home_ball_detection_inhibitore',
+            executable='orient_home_ball_detection_inhibitor',
          )
     
     inhibit_follow_ball_node = Node(
             package='ball_follow',
-            executable='grab_ball_follow_ball_inhibitore',
+            executable='grab_ball_follow_ball_inhibitor',
          )
 
     return LaunchDescription([

@@ -17,7 +17,7 @@ setup(
     install_requires=['setuptools'],
     zip_safe=True,
     maintainer='newans',
-    maintainer_email='josh.newans@gmail.com',
+    maintainer_email='yosefseada@gmail.com',
     description='TODO: Package description',
     license='TODO: License declaration',
     tests_require=['pytest'],
@@ -26,10 +26,9 @@ setup(
             'detect_ball = ball_follow.detect_ball:main',
             'detect_ball_3d = ball_follow.detect_ball_3d:main',
             'follow_ball = ball_follow.follow_ball:main',
-            'orient_home_ball_detection_inhibitore = ball_follow.inhibit_detect_ball:main',
-            'grab_ball_follow_ball_inhibitore = ball_follow.inhibit_follow_ball:main',
+            'orient_home_ball_detection_inhibitor = ball_follow.inhibit_detect_ball:main',
+            'grab_ball_follow_ball_inhibitor = ball_follow.inhibit_follow_ball:main',
             'camera = ball_follow.camera:main',
-            
         ],
     },
 )
