@@ -12,9 +12,6 @@ The layer consists of three main modules:
 2. **Claw Controller** (`claw_controller.py`): Controls the claw mechanism.
 3. **Hardware Interface** (`hardware.py`): Provides low-level hardware control for motors and sensors.
 
-![Claw Mechanism](claw_mechanism.jpg)
-*Figure 1: Close-up view of the claw mechanism, showing the VEX potentiometer and structural details.*
-
 ## Hardware Specifications
 
 - **Robotic Arm**: VEX claw arm
@@ -23,7 +20,14 @@ The layer consists of three main modules:
 - **Motor Driver**: L298N for controlling the DC motor of the arm
 
 
-![Ball Gripping](ball_gripping.jpg)
+
+<img src="photos/claw_with_sensor.jpg" width="30%" height="auto" alt="Claw Mechanism">
+*Figure 1: Close-up view of the claw mechanism, showing the VEX potentiometer and structural details.*
+
+
+
+
+<img src="photos/claw_grabbed_ball.jpeg" width="30%" height="auto" alt="Claw Gripping">
 *Figure 2: The claw mechanism gripping a blue ball, with the camera visible above.*
 
 ## Prerequisites
@@ -78,7 +82,8 @@ The models were trained using a custom calibration script (`distance_calibration
   - Distance (in cm) for regression models
   - Graspability (binary) for the classification model
 
-![Data Collection Setup](data_collection.jpg)
+
+<img src="photos/calibration_dist_setup.jpeg" width="30%" height="auto" alt="Data Collection Setupm">
 *Figure 3: Setup for collecting training data for machine learning models, showing the gridded surface for accurate measurements.*
 
 ### Model Types
