@@ -25,8 +25,8 @@ class LocomotionControllerNode(Node):
     def calculate_twist(self, heading):
         twist = Twist()
         # TODO - update the twist calculation so that the velocity is proportional to the distance and angle
-        twist.linear.x = heading.distance / 2.5 #TODO - remove /2.5 for real robot
-        twist.angular.z = heading.angle / 3.5 #TODO - remove /2.5 for real robot
+        twist.linear.x = heading.distance
+        twist.angular.z = heading.angle
         return twist
     
     #TODO - use for real robot
