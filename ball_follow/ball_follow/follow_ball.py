@@ -82,7 +82,7 @@ class FollowBall(Node):
             self.state_machine.transition_to(FollowerStatus.FOLLOWING)
 
         # only for debugging and testing
-        # self.get_logger().info(f'Received Point: ({msg.pos_x}, {msg.pos_y}) ball size: {msg.size}')
+        # self.get_logger().info(f'Received Point: ({msg.pos_x:.1f}, {msg.pos_y:.1f}) ball size: {msg.size:.1f}')
 
 
     def is_ball_unchanged(self, current_ball_data):
@@ -160,7 +160,7 @@ class FollowBall(Node):
         self.publisher_.publish(msg)
         
         # only for debugging and testing
-        # self.get_logger().info(f'Heading published, x: {msg.distance}, z: {msg.angle}')
+        self.get_logger().info(f'Heading published, x: {msg.distance}, z: {msg.angle}')
 
     def on_unreachable(self):
         # right now do nothing, in futer may can upload some specifiec behavior

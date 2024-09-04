@@ -2,20 +2,21 @@ import os
 import sys
 import time
 import unittest
-
 from ament_index_python import get_package_share_directory
 import launch
 import launch_ros
 import launch_ros.actions
 import launch_testing.actions
-
 import rclpy
-
+from fetchbot_interfaces.msg import Heading, BallInfo
 from sensor_msgs.msg import Image
 import os
 import cv2
 from cv_bridge import CvBridge
 
+'''
+This test is just a template, not ready for run
+'''
 CAMERA_TOPIC = "camera_sensor/image_raw"
 
 HEADING_TOPIC = '/follow_ball'
