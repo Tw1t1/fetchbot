@@ -11,14 +11,14 @@ import launch_testing.actions
 
 from cv_bridge import CvBridge
 import rclpy
-from geometry_msgs.msg import Point
+from fetchbot_interfaces.msg import BallInfo
 from sensor_msgs.msg import Image
 import pytest
 
 from launch import LaunchDescription
 
 
-CAMERA_TOPIC = "/camera_sensor/image_raw"
+CAMERA_TOPIC = "/image_in"
 IMG_TUNING_TOPIC = "/image_tuning"
 IMG_OUT_TOPIC = "/image_out"
 DETECT_BALL_TOPIC = "/detected_ball"
@@ -76,10 +76,11 @@ class TestBallDetectorNode(unittest.TestCase):
     # test that ball detected and keypoint sent to topic
     def test_detect_ball_callback(self, ball_detector, proc_output):
         
+        # kp is BallInfo msg
         received_kps = []
         pub = self.node.create_publisher(Image, CAMERA_TOPIC,1)
             
-        sub = self.node.create_subscription(Point, DETECT_BALL_TOPIC,
+        sub = self.node.create_subscription(BallInfo, DETECT_BALL_TOPIC,
                                             lambda kp:received_kps.append(kp), 1)
         time.sleep(1.0)
         
@@ -88,25 +89,27 @@ class TestBallDetectorNode(unittest.TestCase):
 
         # for an issue wit first image sent, 
         # the topic of CAMERA_IMAGE ignore the first one msg
-        pub.publish(self.get_ros_image("without_ball_0.jpg"))
-        rclpy.spin_once(self.node, timeout_sec=0.3)
         
+        pub.publish(self.get_ros_image("without_ball_0.jpg"))
+        rclpy.spin_once(self.node, timeout_sec=0.1)
+
         try:
 
             for i, image in enumerate(image_files, 0):
                 pub.publish(self.get_ros_image(image))
                 self.node.get_logger().info(f"Publish {image}")
                 rclpy.spin_once(self.node, timeout_sec=0.5)
-
+                
+                time.sleep(1.0)
                 kp = received_kps[i]
                     
-                self.assertTrue(-1.0 <= kp.x <= 1.0)
-                self.assertTrue(-1.0 <= kp.y <= 1.0)
-                self.assertTrue(0.0  <= kp.z <= 1.0)
+                self.assertTrue(-1.0 <= kp.pos_x <= 1.0)
+                self.assertTrue(-1.0 <= kp.pos_y <= 1.0)
+                self.assertTrue(0.0  <= kp.size <= 1.0)
 
                 # for testing uncomment this in detected_ball.py:
-                #     self.get_logger().info(f"Ball detected: ({point_out.x}, {point_out.y}), {point_out.z}")
-                keypoint = f'Ball detected: ({kp.x}, {kp.y}),  {kp.z}'
+                #     self.get_logger().info(f"Ball detected: ({point_out.pos_x}, {point_out.pos_y}), {point_out.size}")
+                keypoint = f'Ball detected: ({kp.pos_x}, {kp.pos_y}),  {kp.size}'
                 success = proc_output.waitFor(
                     expected_output=keypoint, 
                     process=ball_detector, 
@@ -125,7 +128,7 @@ class TestBallDetectorNode(unittest.TestCase):
         received_kps = []
 
         pub = self.node.create_publisher(Image, CAMERA_TOPIC, 1)    
-        sub = self.node.create_subscription(Point, DETECT_BALL_TOPIC,
+        sub = self.node.create_subscription(BallInfo, DETECT_BALL_TOPIC,
                                             lambda kp:received_kps.append(kp), 1)
                 
         image_files = self.filter_images_by_prefix(os.listdir(self.image_dir), "without_")

@@ -2,12 +2,7 @@ import rclpy
 from rclpy.node import Node
 from std_msgs.msg import String, Float64
 
-# from grab_ball.adc_reader import ADCReader
 from grab_ball.hardware import L298N, ADCReader
-
-
-import RPi.GPIO as GPIO
-import time
 
 
 class ClawController(Node):

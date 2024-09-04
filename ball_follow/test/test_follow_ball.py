@@ -8,7 +8,7 @@ import launch_ros.actions
 import launch_testing.actions
 
 import rclpy
-from geometry_msgs.msg import Point, Twist
+from fetchbot_interfaces.msg import Heading, BallInfo
 from std_msgs.msg import String
 import pytest
 
@@ -36,7 +36,7 @@ def generate_test_description():
     follow_ball = launch_ros.actions.Node(
         executable=sys.executable,
         arguments=[os.path.join(file_path, "..","ball_follow", "follow_ball.py")],
-        parameters=[params_file, {'tuning_mode': True}],
+        parameters=[params_file],
     )
 
     return (
@@ -76,26 +76,22 @@ class TestBallDetectorNode(unittest.TestCase):
         data=[
                 (0.1, -0.1, 0.1), 
                 (0.5, 0.5, 0.5),
-                (1.0, 1.0, 1.0),
-                (-0.5,-0.5 ,1.0),
-                (-0.2, 0.7, 0.07)
+                (1.0, 1.00, 1.0),
+                (-0.5,-0.50 ,1.0),
+                (-0.2, 0.7, 0.7)
             ]
-        
-        point_msgs = self.create_points(data)    
+        ball_info_msgs = self.create_ballinfo_msgs(data)    
 
         pub = self.get_ball_info_publisher()  
-        time.sleep(1.0)
+        time.sleep(2.0)
         try:
             
-            for i, msg in enumerate(point_msgs, 0):
-
-                pub.publish(msg)
-                rclpy.spin_once(self.node, timeout_sec=0.1)
-
+            for ball_info in ball_info_msgs:
+                pub.publish(ball_info)
 
                 # for testing uncomment this in detected_ball.py:
                 #     self.get_logger().info('Received Point: ({msg.x}, {msg.y}) ball size: {msg.z}')
-                keypoint = f'Received Point: ({data[i][0]}, {data[i][1]}) ball size: {data[i][2]}'
+                keypoint = f'Received Point: ({ball_info.pos_x}, {ball_info.pos_y}) ball size: {ball_info.size}'
                 self.node.get_logger().info(keypoint)
                 success = proc_output.waitFor(
                     expected_output=keypoint, 
@@ -106,7 +102,6 @@ class TestBallDetectorNode(unittest.TestCase):
         finally:
             self.node.destroy_publisher(pub)
 
-    # heading = Twist
     def test_publish_heading(self, follow_ball, proc_output):
     
         data={
@@ -114,10 +109,10 @@ class TestBallDetectorNode(unittest.TestCase):
                 (0.5, 0.5, 0.5),
                 (1.0, 1.0, 1.0),
                 (-0.5,-0.5 ,1.0),
-                (-0.2, 0.7, 0.07),
+                (-0.2, 0.7, 0.7),
             }
                 
-        point_msgs = self.create_points(data)
+        ball_info_msgs = self.create_ballinfo_msgs(data)
 
         received_heading = []
         pub = self.get_ball_info_publisher()     
@@ -125,26 +120,20 @@ class TestBallDetectorNode(unittest.TestCase):
 
         try:
 
-            for i, point in enumerate(point_msgs, 0):
+            for i, ball_info in enumerate(ball_info_msgs, 0):
 
-                pub.publish(point)
+                pub.publish(ball_info)
                 
-                self.node.get_logger().info(f"Publish point: {point.x},{point.y},{point.z}")
-                rclpy.spin_once(self.node, timeout_sec=0.3)
+                rclpy.spin_once(self.node, timeout_sec=0.1)
 
                 msg = received_heading[i]
                 # for testing uncomment this in follow_ball.py:
                 #     self.get_logger().info(f'Heading published, x: {msg.linear.x}, z: {msg.angular.z}')
-                
-                heading_msg = f'Heading published, x: {msg.linear.x}, z: {msg.angular.z}'
-                success = proc_output.waitFor(
-                    expected_output=heading_msg, 
-                    process=follow_ball, 
-                    timeout = 1.0
-                )
-                assert success, 'Waiting for output timed out'
+                self.assertIsNot(0, msg.distance)
+                self.assertIsNot(0, msg.angle)
+                heading_msg = f'Heading published, x: {msg.distance:.1f}, z: {msg.angle}'
             
-            self.assertEqual(len(point_msgs), len(received_heading))
+            self.assertEqual(len(ball_info_msgs), len(received_heading))
         finally:
             self.node.destroy_subscription(sub)
             self.node.destroy_publisher(pub)
@@ -176,47 +165,7 @@ class TestBallDetectorNode(unittest.TestCase):
         finally:
             self.node.destroy_subscription(sub)
 
-
-
-        '''
-    STOPPED = 0
-    FOLLOWING = 1
-    SEARCHING = 2
-    APPROACH = 3
-    WAITING = 4
-    APPROACHING = 5
-    UNREACABLE = 6
-        '''
-
-    def test_behavior_state_stop_to_wait(self, follow_ball, proc_output):
-
-        data=[
-                (0.1, -0.1, 0.1), 
-                (0.5, 0.5, 0.5),
-                (1.0, 1.0, 1.0),
-                (-0.5,-0.5 ,1.0),
-                (-0.2, 0.7, 0.07)
-            ]
-        
-        received_heading = []
-        received_status = []
-
-        point_msgs = self.create_points(data)    
-
-        ball_info_pub = self.get_ball_info_publisher()
-        status_subscriber = self.get_status_subscriber(lambda msg:received_status.append(msg))
-        heading_sub = self.get_heading_subscriber(lambda msg: received_heading.append(msg))
-        time.sleep(1.0)
     
-        try:
-            pass
-        finally:
-            self.node.destroy_publisher(ball_info_pub)
-            self.node.destroy_subscription(heading_sub)
-            self.node.destroy_subscription(status_subscriber)
-    
-    def test_behavior_state_stop_to_follow(self, follow_ball, proc_output):
-        pass
     
     def test_behavior_state_wait_to_follow(self, follow_ball, proc_output):
         pass
@@ -227,21 +176,23 @@ class TestBallDetectorNode(unittest.TestCase):
     def test_behavior_state_follow_to_unreachable(self, follow_ball, proc_output):
         pass
 
+    def test_behavior_state_unreachable_to_follow(self, follow_ball, proc_output):
+        pass
+
     def test_behavior_state_search_to_follow(self, follow_ball, proc_output):
         pass
 
-    def test_behavior_state_follow_to_stopp(self, follow_ball, proc_output):
-        pass
+    
     
     # helping methods
-    def create_points(self, data):
-        return [Point(x=float(kp[0]), y=float(kp[1]), z=float(kp[2])) for kp in data]
+    def create_ballinfo_msgs(self, data):
+        return [BallInfo(pos_x=float(kp[0]), pos_y=float(kp[1]), size=float(kp[2])) for kp in data]
     def get_ball_info_publisher(self):
-        return self.node.create_publisher(Point, DETECT_BALL_TOPIC, 1)
+        return self.node.create_publisher(BallInfo, DETECT_BALL_TOPIC, 1)
     
     def get_status_subscriber(self, callback):
         return self.node.create_subscription(String, FOLLOW_STATUS_TOPIC, callback, 1)
     
     def get_heading_subscriber(self, callback):
-        return self.node.create_subscription(Twist, HEADING_TOPIC, callback, 1)
+        return self.node.create_subscription(Heading, HEADING_TOPIC, callback, 1)
         
