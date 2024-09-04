@@ -5,10 +5,18 @@ from launch_ros.actions import Node
 from launch.substitutions import Command, FindExecutable, PathJoinSubstitution, LaunchConfiguration
 from launch_ros.substitutions import FindPackageShare
 from launch.event_handlers import OnProcessExit
+from launch.conditions import IfCondition
+
 
 def generate_launch_description():
     # Declare arguments
     declared_arguments = []
+
+    enable_wander = LaunchConfiguration('enable_wander')
+    enable_wander_dec = DeclareLaunchArgument(
+        'enable_wander',
+        default_value='true',
+        description='Enables the wander node')
 
     # Define path variables
     urdf_path = PathJoinSubstitution([FindPackageShare("fetchbot_description"), "urdf", "fetchbot.urdf.xacro"])
@@ -69,7 +77,7 @@ def generate_launch_description():
     locomotion_controller_node = Node(package="obstacle_avoidance", executable="locomotion_controller", output="screen")
 
     # Layer 1 - Wander
-    wander_node = Node(package="wander", executable="wander", name="wander", output="screen")
+    wander_node = Node(package="wander", executable="wander", name="wander", output="screen", condition=IfCondition(enable_wander))
     avoid_node = Node(package="wander", executable="avoid", name="avoid", output="screen")
     detect_ball_wander_inhibitor_node = Node(package="wander", executable="detect_ball_wander_inhibitor", name="detect_ball_wander_inhibitor", output="screen")
     follow_ball_wander_suppressor_node = Node(package="wander", executable="follow_ball_wander_suppressor", name="follow_ball_wander_suppressor", output="screen")
@@ -79,6 +87,7 @@ def generate_launch_description():
     ld = LaunchDescription(declared_arguments)
     
     # Add any actions
+    ld.add_action(enable_wander_dec)
     ld.add_action(robot_state_pub_node)
     ld.add_action(gazebo_node)
     ld.add_action(spawn_entity_node)
