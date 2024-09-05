@@ -1,4 +1,4 @@
-import rclpy
+import rclpy, time
 from rclpy.node import Node
 from fetchbot_interfaces.msg import Heading
 # from geometry_msgs.msg import TwistStamped    #TODO - use for real robot
@@ -16,6 +16,16 @@ class LocomotionControllerNode(Node):
             10)
         # self.publisher = self.create_publisher(TwistStamped, 'cmd_vel', 10)   #TODO - use for real robot
         self.publisher = self.create_publisher(Twist, '/diff_cont/cmd_vel_unstamped', 10)   #TODO - use for sim robot
+        self.timer = self.create_timer(0.5, self.timer_callback)
+        self.heading_time = time.time()
+        self.heading_time_threshold = 0.5
+
+    def timer_callback(self):
+        if time.time() - self.heading_time > self.heading_time_threshold:
+            twist = Twist()
+            twist.linear.x = 0.0
+            twist.angular.z = 0.0
+            self.publisher.publish(twist)
 
     def heading_callback(self, msg):
         twist = self.calculate_twist(msg)

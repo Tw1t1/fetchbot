@@ -75,6 +75,38 @@ class FeelForceNode(Node):
 
         self.publisher.publish(final_force)
 
+    def calculate_free_angle(self, ranges, angles, min_gap_size=0.5, distance_threshold=1.5):
+        # Convert inf values to a large number (e.g., twice the distance_threshold)
+        ranges[np.isinf(ranges)] = 12.0
+
+        # Find contiguous regions where range > distance_threshold
+        free_space = ranges > distance_threshold
+        
+        # Find the start and end indices of free regions
+        region_changes = np.diff(free_space.astype(int))
+        start_indices = np.where(region_changes == 1)[0] + 1
+        end_indices = np.where(region_changes == -1)[0] + 1
+        
+        # If the array starts with a free region, add 0 to start_indices
+        if free_space[0]:
+            start_indices = np.insert(start_indices, 0, 0)
+        
+        # If the array ends with a free region, add len(free_space) to end_indices
+        if free_space[-1]:
+            end_indices = np.append(end_indices, len(free_space))
+        
+        max_gap_size = 0
+        max_gap_angle = None
+        
+        for start, end in zip(start_indices, end_indices):
+            gap_size = angles[end - 1] - angles[start]
+            if gap_size > max_gap_size and gap_size >= min_gap_size:
+                max_gap_size = gap_size
+                max_gap_angle = (angles[start] + angles[end - 1]) / 2
+        
+        return max_gap_angle if max_gap_angle is not None else angles[np.argmax(ranges)]
+
+
     def calculate_laser_force(self):
         scan = self.latest_scan
         ranges = np.array(scan.ranges)
@@ -85,7 +117,7 @@ class FeelForceNode(Node):
         valid_angles = angles[valid_indices]
 
         scale_ranges = valid_ranges * 2
-        inverse_cube_scale_ranges = 1 / (scale_ranges ** 5)
+        inverse_cube_scale_ranges = 1 / (scale_ranges ** 3)
 
         forces_x = np.cos(valid_angles) * inverse_cube_scale_ranges
         forces_y = np.sin(valid_angles) * inverse_cube_scale_ranges
@@ -94,13 +126,15 @@ class FeelForceNode(Node):
         net_force_y = np.sum(forces_y)
 
         magnitude = math.sqrt(net_force_x**2 + net_force_y**2)
-        angle = math.atan2(net_force_y, net_force_x)
+        # angle = math.atan2(net_force_y, net_force_x)
+        free_angle = self.calculate_free_angle(ranges, angles)  # Use the free angle instead of the net force angle
 
         force = Force()
         force.magnitude = magnitude
-        force.direction = angle
+        force.direction = free_angle
 
         return force
+
 
     def calculate_bumper_force(self):
         force = Force()
