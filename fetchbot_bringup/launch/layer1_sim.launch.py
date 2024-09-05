@@ -17,6 +17,12 @@ def generate_launch_description():
         'enable_wander',
         default_value='true',
         description='Enables the wander node')
+    
+    enable_test = LaunchConfiguration('enable_test')
+    enable_test_dec = DeclareLaunchArgument(
+        'enable_test',
+        default_value='false',
+        description='Enables the tests')
 
     # Define path variables
     urdf_path = PathJoinSubstitution([FindPackageShare("fetchbot_description"), "urdf", "fetchbot.urdf.xacro"])
@@ -70,6 +76,9 @@ def generate_launch_description():
         output="screen",
     )
 
+    # Monitor
+    fetchbot_monitor_node = Node(package="fetchbot_monitor", executable="fetchbot_monitor", output="screen")
+
     # Layer 0 - Obstacle Avoidance
     feel_force_node = Node(package="obstacle_avoidance", executable="feel_force", output="screen")
     runaway_node = Node(package="obstacle_avoidance", executable="runaway", output="screen")
@@ -78,6 +87,7 @@ def generate_launch_description():
 
     # Layer 1 - Wander
     wander_node = Node(package="wander", executable="wander", name="wander", output="screen", condition=IfCondition(enable_wander))
+    test_avoid_node = Node(package="wander", executable="test_avoid", name="test_avoid", output="screen", condition=IfCondition(enable_test))
     avoid_node = Node(package="wander", executable="avoid", name="avoid", output="screen")
     detect_ball_wander_inhibitor_node = Node(package="wander", executable="detect_ball_wander_inhibitor", name="detect_ball_wander_inhibitor", output="screen")
     follow_ball_wander_suppressor_node = Node(package="wander", executable="follow_ball_wander_suppressor", name="follow_ball_wander_suppressor", output="screen")
@@ -87,6 +97,7 @@ def generate_launch_description():
     ld = LaunchDescription(declared_arguments)
     
     # Add any actions
+    ld.add_action(enable_test_dec)
     ld.add_action(enable_wander_dec)
     ld.add_action(robot_state_pub_node)
     ld.add_action(gazebo_node)
@@ -99,9 +110,11 @@ def generate_launch_description():
     ld.add_action(avoid_runaway_suppressor_node)
     ld.add_action(locomotion_controller_node)
     ld.add_action(wander_node)
+    ld.add_action(test_avoid_node)
     ld.add_action(avoid_node)
     ld.add_action(detect_ball_wander_inhibitor_node)
     ld.add_action(follow_ball_wander_suppressor_node)
     ld.add_action(orient_home_wander_suppressor_node)
+    ld.add_action(fetchbot_monitor_node)
 
     return ld

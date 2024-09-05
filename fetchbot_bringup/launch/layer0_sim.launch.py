@@ -15,6 +15,7 @@ def generate_launch_description():
     rviz_config_path = PathJoinSubstitution([FindPackageShare("fetchbot_bringup"), "rviz", "urdf_config.rviz"])
     gazebo_world_path = PathJoinSubstitution([FindPackageShare("fetchbot_bringup"), "worlds", "obstacles.world"])
     gazebo_params_file = PathJoinSubstitution([FindPackageShare("fetchbot_description"), "config", "gazebo_params.yaml"])
+    obstacle_avoidance_params_file = PathJoinSubstitution([FindPackageShare("obstacle_avoidance"), "config", "obstacle_avoidance_params.yaml"])
 
     # Robot State Publisher
     robot_state_pub_node = Node(
