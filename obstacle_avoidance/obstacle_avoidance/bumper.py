@@ -2,7 +2,13 @@
 import rclpy
 from rclpy.node import Node
 from fetchbot_interfaces.msg import Collision  # Replace with your actual package name
-import RPi.GPIO as GPIO
+
+# Conditional import for RPi.GPIO
+try:
+    import RPi.GPIO as GPIO
+except ImportError:
+    from unittest.mock import MagicMock
+    GPIO = MagicMock()
 
 class BumperNode(Node):
     def __init__(self):

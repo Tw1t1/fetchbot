@@ -1,10 +1,14 @@
-import rclpy
+import rclpy, time
 from rclpy.node import Node
 from std_msgs.msg import String
 from fetchbot_interfaces.msg import Collision
-from rclpy.timer import Timer
-import time
-import RPi.GPIO as GPIO
+
+# Conditional import for RPi.GPIO
+try:
+    import RPi.GPIO as GPIO
+except ImportError:
+    from unittest.mock import MagicMock
+    GPIO = MagicMock()
 
 class IndicatorNode(Node):
     def __init__(self):
