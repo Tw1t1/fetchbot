@@ -19,23 +19,13 @@ class AvoidNode(Node):
         self.publisher = self.create_publisher(Heading, 'avoid', 10)
         self.current_force = Force()
         self.current_heading = Heading()
-        self.force_time = time.time()
-        self.force_time_threshold = 0.5
 
-        # Tunable parameters
-        self.force_threshold = 33.0  # Minimum force to start avoiding
-        self.max_avoidance_angle = math.pi / 2  # Maximum angle to turn for avoidance
-        self.force_scale = 0.01  # Scale factor for force magnitude
-        self.min_speed = 0.1  # Minimum speed when avoiding obstacles
-        
         self.random_factor = 0.3  # Random factor for combining heading and force
         self.significant_force = 0.5 # Adjust as needed
         self.collition_force = 10000 # Adjust as needed
 
-
     def force_callback(self, msg):
         self.current_force = msg
-        self.force_time = time.time()
 
     def heading_callback(self, msg):
         self.current_heading = msg
@@ -46,7 +36,7 @@ class AvoidNode(Node):
 
         if self.current_force.magnitude > self.collition_force and abs(self.current_force.direction) > math.pi/2: 
             # Collision force, and obsticals are in front of the robot
-            new_heading.distance = 0.0
+            new_heading.distance = -0.1
             new_heading.angle = self.current_force.direction
     
         elif self.current_force.magnitude > self.significant_force:

@@ -52,7 +52,7 @@ class LocomotionControllerNode(Node):
     def heading_callback(self, msg):
         self.current_heading = msg
         self.last_heading_time = self.get_clock().now()
-        if msg.distance == 0.0:
+        if msg.distance < 0.0:
             self.obstacle_detected = True
         else:
             self.obstacle_detected = False

@@ -22,7 +22,7 @@ class RunAwayNode(Node):
         if msg.magnitude > self.collision_force and abs(msg.direction) > math.pi/2: 
             # Collision force, and obsticals are in front of the robot
             heading = Heading()
-            heading.distance = 0.0
+            heading.distance = -0.1
             heading.angle = msg.direction
             self.publisher.publish(heading)
         elif msg.magnitude > self.significant_force:
