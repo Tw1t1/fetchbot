@@ -70,6 +70,7 @@ class GrabBall(Node):
         if self.current_status == GrabStatus.GRABBED and \
             (current_time - self.lastrcvtime) > self.rcv_timeout_secs: 
             self.open_claw()
+            self.get_logger().info('Ball released!!!!!!')
             self.current_status = GrabStatus.WAITING
         
         # Publish the current grab status
@@ -89,6 +90,7 @@ class GrabBall(Node):
             if self.is_ball_grabbed():
                 self.stop_claw()
                 self.current_status = GrabStatus.GRABBED
+                self.get_logger().info('Ball grabbed!!!!!!!!')
         except Exception as e:
             self.get_logger().error(f'Error in position_callback: {str(e)}')
 
@@ -98,7 +100,7 @@ class GrabBall(Node):
             return False
         
         estimated_dist, is_grabable = self.predict_distance(msg)
-
+        self.get_logger().info(f'Distance : {estimated_dist:.3f}, Grabable {is_grabable}')
         return is_grabable and estimated_dist <= 7.0
 
     def ball_info_callback(self, msg):
