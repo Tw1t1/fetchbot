@@ -37,7 +37,10 @@ class FollowBall(Node):
             String, '/follow_ball/status', 10)
         
         self.create_timer(1.0, self.broadcast_current_status)
-        self.create_timer(0.1, self.execute_ball_following_cycle)
+        
+        self.follow_rate = 1.0/10.0 #  frequency 10 Hz
+        self.create_timer(self.follow_rate, self.execute_ball_following_cycle)
+        self.searching_count = 0
 
         self.declare_follow_parameters()
         self.setup_state_machine()
@@ -118,6 +121,8 @@ class FollowBall(Node):
         msg = Heading()
 
         self.search_start_time = None
+        
+        self.searching_count = 0 # TODO
 
         if self.target_dist < self.max_size_thresh:
             msg.distance = self.forward_chase_speed
@@ -132,29 +137,47 @@ class FollowBall(Node):
         # do nothing
         pass
 
-
+    # based on if (1.0 / turn_frequency) * count * angular_velocity > turn_angle
     def on_searching(self):
+        
         msg = Heading()
-        current_time = time.time()
-
-        if self.search_start_time is None:
-            # This is the first time we're starting to search
-            self.search_start_time = current_time
+        msg.angle = self.search_angular_speed
         
+        self.searching_count += 1
+        
+        turn_angle = 2 * pi * self.search_rotations
+        current_angle = self.follow_rate * self.searching_count * self.search_angular_speed
 
-        correction_factor = 1.6
-        rotation_duration = correction_factor*((2*pi*self.search_rotations)/self.search_angular_speed)
-
-        time_passed = current_time - self.search_start_time
-        if rotation_duration > time_passed:
-            msg.angle = self.search_angular_speed
-        else:
+        if current_angle > turn_angle:
             self.ball_detected = False
-            self.search_start_time = None
-        
+            self.searching_count = 0
+            msg.angle = 0.0  # Stop rotating
+
         self.publisher_.publish(msg)
-        # only for debugging and testing
-        # self.get_logger().info(f'Heading published, x: {msg.distance}, z: {msg.angle}')
+
+
+    # def on_searching(self):
+    #     msg = Heading()
+    #     current_time = time.time()
+
+    #     if self.search_start_time is None:
+    #         # This is the first time we're starting to search
+    #         self.search_start_time = current_time
+
+
+    #     correction_factor = 1.6
+    #     rotation_duration = correction_factor*((2*pi*self.search_rotations)/self.search_angular_speed)
+
+    #     time_passed = current_time - self.search_start_time
+    #     if rotation_duration > time_passed:
+    #         msg.angle = self.search_angular_speed
+    #     else:
+    #         self.ball_detected = False
+    #         self.search_start_time = None
+        
+    #     self.publisher_.publish(msg)
+    #     # only for debugging and testing
+    #     # self.get_logger().info(f'Heading published, x: {msg.distance}, z: {msg.angle}')
 
     def on_unreachable(self):
         # right now do nothing, in futer may can upload some specifiec behavior
