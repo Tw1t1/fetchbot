@@ -35,10 +35,10 @@ class FollowBall(Node):
                         
         self.status_publisher = self.create_publisher(
             String, '/follow_ball/status', 10)
+
+        self.follow_rate = 1.0/10.0 #  frequency 10 Hz        
+        self.create_timer(self.follow_rate, self.broadcast_current_status)
         
-        self.create_timer(1.0, self.broadcast_current_status)
-        
-        self.follow_rate = 1.0/10.0 #  frequency 10 Hz
         self.create_timer(self.follow_rate, self.execute_ball_following_cycle)
 
         self.declare_follow_parameters()
