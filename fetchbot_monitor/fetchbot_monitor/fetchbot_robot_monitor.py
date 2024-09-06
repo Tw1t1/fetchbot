@@ -147,12 +147,35 @@ class FetchBotDisplay(Node):
         # self.update_text_widget(topic, content)
 
     def laser_scan_callback(self, topic, msg):
+        # fig, ax, canvas = self.plot_widgets[topic]
+        # ax.clear()
+        # angles = np.linspace(msg.angle_min, msg.angle_max, len(msg.ranges))
+        # ax.plot(angles, msg.ranges)
+        # ax.set_theta_zero_location("N")
+        # ax.set_title("LaserScan")
+        # canvas.draw()
+
         fig, ax, canvas = self.plot_widgets[topic]
         ax.clear()
+        
         angles = np.linspace(msg.angle_min, msg.angle_max, len(msg.ranges))
         ax.plot(angles, msg.ranges)
+        
+        # Calculate the minimum range
+        min_range = min(msg.ranges)
+        min_angle = angles[msg.ranges.index(min_range)]
+        
+        # Plot the minimum range point
+        ax.plot(min_angle, min_range, 'ro', markersize=10)  # Red dot for minimum range
+        
+        # Add text annotation for minimum range
+        ax.annotate(f'Min: {min_range:.2f}m', xy=(min_angle, min_range), 
+                    xytext=(min_angle + 0.1, min_range + 0.1),
+                    arrowprops=dict(facecolor='black', shrink=0.05))
+        
         ax.set_theta_zero_location("N")
-        ax.set_title("LaserScan")
+        ax.set_title("LaserScan with Minimum Range")
+        
         canvas.draw()
 
     def force_callback(self, topic, msg):
@@ -165,8 +188,8 @@ class FetchBotDisplay(Node):
         canvas.draw()
 
     def twist_callback(self, topic, msg):
-        content = f"Linear: x={msg.linear.x:.2f}, y={msg.linear.y:.2f}, z={msg.linear.z:.2f}\n"
-        content += f"Angular: x={msg.angular.x:.2f}, y={msg.angular.y:.2f}, z={msg.angular.z:.2f}"
+        content = f"Linear: {msg.linear.x:.2f}\n"
+        content += f"Angular: {msg.angular.z:.2f}"
         self.update_text_widget(topic, content)
 
     def run(self):
