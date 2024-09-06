@@ -18,6 +18,7 @@ setup(
     description='TODO: Package description',
     license='TODO: License declaration',
     tests_require=['pytest'],
+    test_suite='test',
     entry_points={
         'console_scripts': [
             'feel_force = obstacle_avoidance.feel_force:main',
@@ -26,6 +27,7 @@ setup(
             'indicator = obstacle_avoidance.indicator:main',
             'locomotion_controller = obstacle_avoidance.locomotion_controller:main',
             'bumper = obstacle_avoidance.bumper:main',
+            'test_node = obstacle_avoidance.test_node:main',
         ],
     },
 )
