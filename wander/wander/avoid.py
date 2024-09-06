@@ -28,8 +28,8 @@ class AvoidNode(Node):
         self.force_scale = 0.01  # Scale factor for force magnitude
         self.min_speed = 0.1  # Minimum speed when avoiding obstacles
         
-        self.random_factor = 0.5  # Random factor for combining heading and force
-        self.significant_force = 0.45 # Adjust as needed
+        self.random_factor = 0.3  # Random factor for combining heading and force
+        self.significant_force = 0.5 # Adjust as needed
         self.collition_force = 10000 # Adjust as needed
 
 

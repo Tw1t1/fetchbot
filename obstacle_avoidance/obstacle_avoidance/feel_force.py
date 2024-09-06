@@ -41,7 +41,6 @@ class FeelForceNode(Node):
                 # Calculate force contribution (inversely proportional to distance squared)
                 if range_value <= self.collision_range_treshold:
                     force_magnitude = self.collision_magnitude
-                    self.get_logger().info("Collision")
                 else:
                     force_magnitude = max(range_value, msg.range_min) / self.range_factor
                     force_magnitude = 1.0 / force_magnitude**self.power_factor
@@ -52,7 +51,6 @@ class FeelForceNode(Node):
         # Check if collision force is still relevant
         current_time = time.time()
         if current_time - self.last_collision_time <= self.collision_duration:
-            self.get_logger().info("Collision")
             # Combine LiDAR force with collision force
             total_force_x = force_x + self.collision_force_x 
             total_force_y = force_y + self.collision_force_y

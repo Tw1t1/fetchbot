@@ -14,7 +14,7 @@ class RunAwayNode(Node):
             self.force_callback,
             10)
         self.publisher = self.create_publisher(Heading, 'runaway', 10)
-        self.significant_force = 0.45 # Adjust as needed
+        self.significant_force = 0.5 # Adjust as needed
         self.collision_force = 10000 # Adjust as needed
 
     def force_callback(self, msg):
