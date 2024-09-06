@@ -35,9 +35,11 @@ class FollowBall(Node):
                         
         self.status_publisher = self.create_publisher(
             String, '/follow_ball/status', 10)
+
+        self.follow_rate = 1.0/10.0 #  frequency 10 Hz        
+        self.create_timer(self.follow_rate, self.broadcast_current_status)
         
-        self.create_timer(1.0, self.broadcast_current_status)
-        self.create_timer(0.1, self.execute_ball_following_cycle)
+        self.create_timer(self.follow_rate, self.execute_ball_following_cycle)
 
         self.declare_follow_parameters()
         self.setup_state_machine()
@@ -116,14 +118,15 @@ class FollowBall(Node):
 
     def on_following(self):
         msg = Heading()
-
-        self.search_start_time = None
-
+        
         if self.target_dist < self.max_size_thresh:
             msg.distance = self.forward_chase_speed
         msg.angle = -self.angular_chase_multiplier * self.target_val
-        
+
+        self.get_logger().info(f'target_val: {self.target_val:.3f}, msg.angle: {msg.angle:.3f}')
         self.publisher_.publish(msg)
+        
+        self.searching_count = 0 
         # only for debugging and testing
         # self.get_logger().info(f'Heading published, x: {msg.distance}, z: {msg.angle}')
 
@@ -132,29 +135,27 @@ class FollowBall(Node):
         # do nothing
         pass
 
-
+    # based on if (1.0 / turn_frequency) * count * angular_velocity > turn_angle
     def on_searching(self):
+        
         msg = Heading()
-        current_time = time.time()
-
-        if self.search_start_time is None:
-            # This is the first time we're starting to search
-            self.search_start_time = current_time
+        angular_velocity = -self.search_angular_speed * (self.target_val/abs(self.target_val))
+        msg.angle = angular_velocity
         
-
-        correction_factor = 1.6
-        rotation_duration = correction_factor*((2*pi*self.search_rotations)/self.search_angular_speed)
-
-        time_passed = current_time - self.search_start_time
-        if rotation_duration > time_passed:
-            msg.angle = self.search_angular_speed
-        else:
+        
+        turn_angle = 2 * pi * self.search_rotations * 2.3
+        current_angle = self.follow_rate * self.searching_count * abs(angular_velocity)
+        
+        self.searching_count += 1
+        if current_angle > turn_angle:
             self.ball_detected = False
-            self.search_start_time = None
-        
+            self.searching_count = 0
+            msg.angle = 0.0  # Stop rotating
+
         self.publisher_.publish(msg)
         # only for debugging and testing
         # self.get_logger().info(f'Heading published, x: {msg.distance}, z: {msg.angle}')
+
 
     def on_unreachable(self):
         # right now do nothing, in futer may can upload some specifiec behavior
@@ -169,8 +170,8 @@ class FollowBall(Node):
 
         # Variables for search behavior
         self.ball_detected = False
-        self.search_start_time = None
-
+        self.searching_count = 0
+        
         # Variables for unchange ball data
         self.last_ball_data = None
         self.unchanged_start_time = None
