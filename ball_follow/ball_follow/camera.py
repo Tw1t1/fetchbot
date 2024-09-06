@@ -10,23 +10,23 @@ class CameraNode(Node):
     def __init__(self):
         super().__init__('camera_node')
         
-        self.camera_device = '/dev/video0'
         self.frame_id = 0
         self.image_width = 640
         self.image_height = 480
         self.fps = 30
         
-        self.image_pub = self.create_publisher(Image, '/camera_sensor/image_raw', 10)
+        self.image_pub = self.create_publisher(Image, '/camera_sensor/image_raw', 5)
         
         self.bridge = CvBridge()
         
+        
         try:
-            self.cap = cv2.VideoCapture(self.camera_device)
+            self.cap = cv2.VideoCapture(0)
             self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, self.image_width)
             self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, self.image_height)
             self.cap.set(cv2.CAP_PROP_FPS, self.fps)
         except Exception as e:
-            self.get_logger().error(f'Failed to open camera: {str(e)}')
+            self.get_logger().info(f'Failed to open camera: {str(e)}')
             return
         
         self.timer = self.create_timer(1.0/self.fps, self.timer_callback)
@@ -36,7 +36,7 @@ class CameraNode(Node):
     def timer_callback(self):
         ret, frame = self.cap.read()
         if not ret:
-            self.get_logger().warn('Failed to capture frame')
+            self.get_logger().info('Failed to capture frame')
             return
         
         try:
@@ -51,13 +51,9 @@ class CameraNode(Node):
             # self.get_logger().info(f'Published image id: {img_msg.header.frame_id}')
 
         except Exception as e:
-            self.get_logger().error(f'Failed to convert/publish image: {str(e)}')
+            self.get_logger().info(f'Failed to convert/publish image: {str(e)}')
         
-        self.camera_info.header = img_msg.header
-        self.camera_info_pub.publish(self.camera_info)
-
-
-
+        
     def cleanup(self):
         if hasattr(self, 'cap'):
             self.cap.release()

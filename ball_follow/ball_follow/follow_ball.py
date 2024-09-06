@@ -10,7 +10,6 @@ from enum import Enum
 from ball_follow.state_machine import StateMachine
 from fetchbot_interfaces.msg import Heading, BallInfo
 
-
 # """
 # This module implements a ball follower node for ROS2.
 # It tracks a ball, follows it, and publishes its status.
@@ -33,7 +32,7 @@ class FollowBall(Node):
         
         self.publisher_ = self.create_publisher(
             Heading, '/follow_ball', 10)
-        
+                        
         self.status_publisher = self.create_publisher(
             String, '/follow_ball/status', 10)
         
@@ -66,24 +65,6 @@ class FollowBall(Node):
         self.state_machine.update()
         
 
-    def process_ball_detection(self, msg):
-        """
-        Process incoming ball detection data and update target information.
-        """
-        f = self.filter_value
-        self.target_val = self.target_val * f + msg.pos_x * (1-f)
-        self.target_dist = self.target_dist * f + msg.size * (1-f)
-        self.lastrcvtime = time.time()
-        self.ball_detected = True
-        
-        if self.is_ball_unchanged(msg):
-            self.state_machine.transition_to(FollowerStatus.UNREACHABLE)
-        else:
-            self.state_machine.transition_to(FollowerStatus.FOLLOWING)
-
-        # only for debugging and testing
-        # self.get_logger().info(f'Received Point: ({msg.pos_x:.1f}, {msg.pos_y:.1f}) ball size: {msg.size:.1f}')
-
 
     def is_ball_unchanged(self, current_ball_data):
         """
@@ -114,16 +95,32 @@ class FollowBall(Node):
         return False
 
 
+    def process_ball_detection(self, msg):
+        """
+        Process incoming ball detection data and update target information.
+        """
+        f = self.filter_value
+        self.target_val = self.target_val * f + msg.pos_x * (1-f)
+        self.target_dist = self.target_dist * f + msg.size * (1-f)
+        self.lastrcvtime = time.time()
+        self.ball_detected = True
+        
+        if self.is_ball_unchanged(msg):
+            self.state_machine.transition_to(FollowerStatus.UNREACHABLE)
+        else:
+            self.state_machine.transition_to(FollowerStatus.FOLLOWING)
+
+        # only for debugging and testing
+        # self.get_logger().info(f'Received Point: ({msg.pos_x:.1f}, {msg.pos_y:.1f}) ball size: {msg.size:.1f}')
+
+
     def on_following(self):
-        # msg = Twist()
         msg = Heading()
 
         self.search_start_time = None
 
         if self.target_dist < self.max_size_thresh:
-            # msg.linear.x = self.forward_chase_speed
             msg.distance = self.forward_chase_speed
-        # msg.angular.z = -self.angular_chase_multiplier * self.target_val
         msg.angle = -self.angular_chase_multiplier * self.target_val
         
         self.publisher_.publish(msg)
@@ -137,7 +134,6 @@ class FollowBall(Node):
 
 
     def on_searching(self):
-        # msg = Twist()
         msg = Heading()
         current_time = time.time()
 
@@ -151,16 +147,14 @@ class FollowBall(Node):
 
         time_passed = current_time - self.search_start_time
         if rotation_duration > time_passed:
-            # msg.angular.z = self.search_angular_speed
             msg.angle = self.search_angular_speed
         else:
             self.ball_detected = False
             self.search_start_time = None
         
         self.publisher_.publish(msg)
-        
         # only for debugging and testing
-        self.get_logger().info(f'Heading published, x: {msg.distance}, z: {msg.angle}')
+        # self.get_logger().info(f'Heading published, x: {msg.distance}, z: {msg.angle}')
 
     def on_unreachable(self):
         # right now do nothing, in futer may can upload some specifiec behavior

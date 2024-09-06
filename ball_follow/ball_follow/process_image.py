@@ -12,7 +12,7 @@ class BallDetector:
         if self.prev_image is None:
             self.prev_image = image
 
-        alpha = 0.3
+        alpha = 0.5
         beta = 1.0 - alpha
         image = cv2.addWeighted(image, alpha, self.prev_image, beta, 0.0)
         self.prev_image = image
@@ -120,21 +120,3 @@ class BallDetector:
     @staticmethod
     def wait_on_gui():
         cv2.waitKey(2)
-
-# Example usage:
-# initial_params = {
-#     'x_min': 0, 'x_max': 100, 'y_min': 0, 'y_max': 100,
-#     'h_min': 0, 'h_max': 180, 's_min': 0, 's_max': 255, 'v_min': 0, 'v_max': 255,
-#     'sz_min': 0, 'sz_max': 100
-# }
-# detector = BallDetector(initial_params)
-# while True:
-#     image = capture_image()  # Function to capture image
-#     keypoints, out_image, tuning_image = detector.find_circles(image, tuning_mode=True)
-#     cv2.imshow("Output", out_image)
-#     cv2.imshow("Tuning", tuning_image)
-#     detector.get_tuning_params()
-#     detector.wait_on_gui()
-#     if cv2.waitKey(1) & 0xFF == ord('q'):
-#         break
-# cv2.destroyAllWindows()
