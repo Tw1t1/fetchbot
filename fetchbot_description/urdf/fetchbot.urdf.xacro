@@ -6,6 +6,9 @@
     <xacro:include filename="ros2_control_gazebo.xacro" />
     <!-- <xacro:include filename="diffdrive.ros2_control.xacro" /> -->
     <xacro:include filename="lidar.xacro" />
+    <xacro:include filename="claw.xacro" />
     <xacro:include filename="camera.xacro" />
+
+
 
 </robot>

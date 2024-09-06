@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro">
 
-    <xacro:property name="lidar_radius" value="0.025" />
-    <xacro:property name="lidar_length" value="0.0725" />
+    <xacro:property name="lidar_radius" value="0.035" />
+    <xacro:property name="lidar_length" value="0.117" />
 
     <joint name="laser_joint" type="fixed">
         <parent link="base_link"/>
