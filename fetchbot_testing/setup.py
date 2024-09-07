@@ -23,7 +23,7 @@ setup(
             'ball_mover = fetchbot_testing.ball_mover:main',
             'twist_publisher = fetchbot_testing.heading_to_twist_pub:main',
             'test_ball_detection = fetchbot_testing.test_ball_detection:main',
-            
+            'simulated_claw_controller = fetchbot_testing.simulated_claw_controller:main',
         ],
     },
 )
