@@ -74,4 +74,16 @@
         <material>Gazebo/Red</material>
     </gazebo>
 
+    <gazebo reference="claw_link">
+        <material>Gazebo/Purple</material>
+    </gazebo>
+
+    <gazebo reference="left_gripper_link">
+        <material>Gazebo/Purple</material>
+    </gazebo>
+
+    <gazebo reference="right_gripper_link">
+        <material>Gazebo/Purple</material>
+    </gazebo>
+
 </robot>
