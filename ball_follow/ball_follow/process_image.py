@@ -2,11 +2,12 @@ import cv2
 import numpy as np
 
 class BallDetector:
-    def __init__(self, initial_params):
+    def __init__(self, initial_params, tuning_mode=False):
         self.prev_image = None
         self.tuning_params = initial_params
+        self.tuning_mode = tuning_mode
 
-    def find_circles(self, image, tuning_mode=False):
+    def find_circles(self, image):
 
 
         if self.prev_image is None:
@@ -48,7 +49,7 @@ class BallDetector:
 
         out_image = None
         tuning_image = None
-        if tuning_mode:
+        if self.tuning_mode:
             out_image = image.copy()
             tuning_image = cv2.bitwise_and(image, image, mask=mask)
             line_color = (0, 0, 255)
