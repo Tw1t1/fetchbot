@@ -1,4 +1,4 @@
-import rclpy
+import rclpy, time
 from rclpy.node import Node
 from std_msgs.msg import String, Float64
 
@@ -19,6 +19,8 @@ class ClawController(Node):
         self.init_hardware()
         
         self.current_position = -1.0
+        self.last_executed_command = ''
+        self.lst_cmd_time = time.time()
 
         self.get_logger().info('claw_controller has been started!')
 
@@ -58,23 +60,31 @@ class ClawController(Node):
         self.position_pub.publish(msg)
         self.current_position = position
 
+        # verify we dont stay in open or close more then we need
+        if self.last_executed_command != 'stop' and (time.time() - self.lst_cmd_time) > 1.0:
+            self.motor.stop()
+            self.last_executed_command = 'stop'
+
 
     def claw_cmd_callback(self, msg):
         try:
-            msg = msg.data
+            self.lst_cmd_time = time.time()
+            cmd = msg.data
             if (self.current_position > self.claw_sensor_threshold) or \
                 (self.current_position < 100.0 - self.claw_sensor_threshold):
                 
-                if msg == 'open':
+                if cmd == 'open':
                     self.motor.forward()
-                elif msg == 'close':
+                elif cmd == 'close':
                     self.motor.backward()
-                elif msg == 'stop':
+                elif cmd == 'stop':
                     self.motor.stop()
                 else:
-                    self.get_logger().warn(f'Received invalid claw command: {msg.data}')
+                    self.get_logger().warn(f'Received invalid claw command: {cmd}')
+                self.last_executed_command = cmd
             else:
                 self.motor.stop()
+                self.last_executed_command = 'stop'
                 self.get_logger().info('self.motor.stop()')
         except Exception as e:
             self.get_logger().error(f'Error in claw_cmd_callback: {str(e)}')
