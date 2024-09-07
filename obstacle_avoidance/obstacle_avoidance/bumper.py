@@ -51,7 +51,7 @@ class BumperNode(Node):
         elif right_pressed:
             return self.right_angle, self.right_range
         else:
-            return None  # No collision
+            return None, None  # No collision
 
     def timer_callback(self):
         left_pressed, right_pressed = self.read_bumper_sensors()
