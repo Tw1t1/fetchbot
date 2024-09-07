@@ -71,7 +71,8 @@ class IndicatorNode(Node):
         self.update_status('collision')
     
     def follow_ball_callback(self, msg):
-        self.update_status('follow_ball')
+        if msg.data == "UNREACHABLE":
+            self.update_status('follow_ball')
 
     def orient_home_callback(self, msg):
         self.update_status('orient_home')
