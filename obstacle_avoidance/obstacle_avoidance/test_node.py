@@ -49,8 +49,12 @@ class TestNode(Node):
         self.lock = Lock()
 
         self.scan_files = [
-            'short_25', 'short_50', 'short_75', 'short_100', 'short_125', 'short_150',
-            'long_25', 'long_50', 'long_75', 'long_100', 'long_125', 'long_150'
+            'long_front_30', 'long_front_40',  'long_front_80', 
+            'long_rear_25', 'long_rear_35', 'long_rear_75',
+            'long_side_20', 'long_side_30', 'long_side_70',
+            'short_front_30', 'short_front_40', 'short_front_80',
+            'short_rear_25' ,'short_rear_35', 'short_rear_75',
+            'short_side_20', 'short_side_30', 'short_side_70'
         ]
         self.current_scan_index = 0
         self.publishing_scans = False

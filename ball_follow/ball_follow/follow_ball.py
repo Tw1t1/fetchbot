@@ -123,7 +123,6 @@ class FollowBall(Node):
             msg.distance = self.forward_chase_speed
         msg.angle = -self.angular_chase_multiplier * self.target_val
 
-        self.get_logger().info(f'target_val: {self.target_val:.3f}, msg.angle: {msg.angle:.3f}')
         self.publisher_.publish(msg)
         
         self.searching_count = 0 
