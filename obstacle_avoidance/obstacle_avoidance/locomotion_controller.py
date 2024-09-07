@@ -29,7 +29,7 @@ class LocomotionControllerNode(Node):
         self.max_linear_velocity = 0.4
         self.angular_velocity = 1.0
         self.min_linear_velocity = 0.1
-        self.stopping_distance = 0.3
+        self.stopping_distance = 0.2
         self.reverse_speed = -0.2
 
         # State variables
@@ -42,8 +42,6 @@ class LocomotionControllerNode(Node):
         self.reverse_start_position = 0.0
         self.is_reversing = False
         self.last_action = 'none'
-        self.action_count = 0
-        self.stuck_threshold = 5  # Number of repeated actions before considering stuck
 
         # Timeout handling
         self.last_heading_time = self.get_clock().now()
@@ -86,20 +84,8 @@ class LocomotionControllerNode(Node):
             twist.linear.x = self.calculate_desired_linear_velocity()
             twist.angular.z = self.calculate_desired_angular_velocity()
             self.last_action = 'normal'
-
-        # Check if we're stuck in a loop
-        if self.last_action == self.last_action:
-            self.action_count += 1
-        else:
-            self.action_count = 0
-
-        if self.action_count > self.stuck_threshold:
-            # We're stuck, perform a random turn
-            twist.linear.x = 0.0
-            twist.angular.z = self.angular_velocity * (1 if self.get_clock().now().nanoseconds % 2 == 0 else -1)
-            self.action_count = 0
-
         self.publisher.publish(twist)
+
 
     def calculate_desired_linear_velocity(self):
         if self.obstacle_detected:
@@ -140,7 +126,6 @@ class LocomotionControllerNode(Node):
         self.current_angular_velocity = 0.0
         self.is_reversing = False
         self.last_action = 'none'
-        self.action_count = 0
 
 
 def main(args=None):
