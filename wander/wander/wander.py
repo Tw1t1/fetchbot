@@ -12,10 +12,11 @@ class WanderNode(Node):
         self.distance = 1.0 # Adjust as needed
         self.last_angle = 0.0
         self.factor = 0.7
+        self.max_angle = math.pi * 0.7
 
     def timer_callback(self):
         heading = Heading()
-        random_angle = random.uniform(math.pi/2, -math.pi/2)  # Turn between 90 and -90 degrees
+        random_angle = random.uniform(self.max_angle, -self.max_angle)  # Turn between 90 and -90 degrees
         heading.angle = self.factor * self.last_angle + (1 - self.factor) * random_angle
         heading.distance = self.distance
         self.publisher.publish(heading)
