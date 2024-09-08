@@ -42,7 +42,7 @@ class IndicatorNode(Node):
             'low_battery': {'active': False, 'timestamp': 0, 'color': (255, 165, 0)}  # Orange
         }
         
-        self.timeout = 0.3  # 0.3 seconds timeout
+        self.timeout = 0.5  # 0.3 seconds timeout
         
         # Set up GPIO for Keyes 3-Color RGB LED
         self.R, self.G, self.B = 19, 26, 13

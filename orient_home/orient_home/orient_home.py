@@ -11,7 +11,7 @@ class TwistPubNode(Node):
             String, '/grab_ball/status', self.callback, 2)
         
         self.publisher_ = self.create_publisher(
-            String, '/orient_home_detect_ball_inhibitor', 2)
+            String, '/orient_home/returning_home', 2)
 
     def callback(self, msg):
         home_msg = String()

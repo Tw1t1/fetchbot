@@ -13,7 +13,7 @@ def main(args=None):
         sub2_topic_name = 'runaway',
         pub_msg_type = Heading,
         pub_topic_name = 'avoid_runaway_suppressor',
-        delay = 0.5
+        delay = 1.0
     )
     try:
         rclpy.spin(avoid_runaway_suppressor_node)

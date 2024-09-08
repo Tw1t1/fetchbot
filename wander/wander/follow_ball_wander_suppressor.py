@@ -12,7 +12,7 @@ def main(args=None):
         sub2_topic_name = 'detect_ball_wander_inhibitor',
         pub_msg_type = Heading,
         pub_topic_name = 'follow_ball_wander_suppressor',
-        delay = 0.5
+        delay = 1.0
     )
     try:
         rclpy.spin(follow_ball_wander_suppressor_node)
