@@ -27,7 +27,6 @@ setup(
             'indicator = obstacle_avoidance.indicator:main',
             'locomotion_controller = obstacle_avoidance.locomotion_controller:main',
             'bumper = obstacle_avoidance.bumper:main',
-            'test_node = obstacle_avoidance.test_node:main',
         ],
     },
 )

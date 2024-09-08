@@ -1,13 +1,15 @@
-import unittest, sys, rclpy
+import unittest
+import sys
+import rclpy
 from unittest.mock import MagicMock, patch
 from fetchbot_interfaces.msg import Collision
 from obstacle_avoidance.bumper import BumperNode
 
+# Mock RPi.GPIO
 sys.modules['RPi'] = MagicMock()
 sys.modules['RPi.GPIO'] = MagicMock()
 
 class TestBumperNode(unittest.TestCase):
-
     @classmethod
     def setUpClass(cls):
         rclpy.init()
@@ -60,8 +62,9 @@ class TestBumperNode(unittest.TestCase):
         self.assertEqual(range_, self.node.right_range)
 
         # Test no bumpers pressed
-        result = self.node.calculate_collision_angle(False, False)
-        self.assertIsNone(result)
+        angle, range_ = self.node.calculate_collision_angle(False, False)
+        self.assertIsNone(angle)
+        self.assertIsNone(range_)
 
     @patch('obstacle_avoidance.bumper.BumperNode.read_bumper_sensors')
     @patch('obstacle_avoidance.bumper.BumperNode.calculate_collision_angle')
