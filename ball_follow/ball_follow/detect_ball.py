@@ -1,13 +1,12 @@
 # Based on Josh Newans code (modifications by Yosef Seada)
 
+from cv2 import KeyPoint
 import rclpy
 from rclpy.node import Node
 from sensor_msgs.msg import Image
-from geometry_msgs.msg import Point
+from fetchbot_interfaces.msg import BallInfo
 from cv_bridge import CvBridge
-from ball_follow.my_proc_image import BallDetector
-
-
+from ball_follow.process_image import BallDetector
 
 
 class DetectBall(Node):
@@ -15,13 +14,18 @@ class DetectBall(Node):
     def __init__(self):
         super().__init__('detect_ball')
 
-        self.image_sub = self.create_subscription(Image, "/image_in", self.callback,rclpy.qos.QoSPresetProfiles.SENSOR_DATA.value)
+        self.image_sub = self.create_subscription(
+            Image, 
+            "/image_in", 
+            self.process_image_for_ball_detection, 
+            rclpy.qos.QoSPresetProfiles.SENSOR_DATA.value)
         
         self.image_out_pub = self.create_publisher(Image, "/image_out", 1)
         self.image_tuning_pub = self.create_publisher(Image, "/image_tuning", 1)
-        self.ball_pub  = self.create_publisher(Point,"/detected_ball",1)
+        self.ball_pub  = self.create_publisher(BallInfo,"/detected_ball",1)
 
         self.declare_parameter('tuning_mode', False)
+        self.declare_parameter('publish_tuning_img', False)
 
         self.declare_parameter("x_min",0)
         self.declare_parameter("x_max",100)
@@ -36,6 +40,7 @@ class DetectBall(Node):
         self.declare_parameter("sz_min",0)
         self.declare_parameter("sz_max",100)
         
+        self.publish_tuning_img = self.get_parameter('publish_tuning_img').get_parameter_value().bool_value
         self.tuning_mode = self.get_parameter('tuning_mode').get_parameter_value().bool_value
         self.tuning_params = {
             'x_min': self.get_parameter('x_min').get_parameter_value().integer_value,
@@ -53,7 +58,7 @@ class DetectBall(Node):
         }
 
         self.bridge = CvBridge()
-        self.detector = BallDetector(self.tuning_params)
+        self.detector = BallDetector(self.tuning_params, self.publish_tuning_img or self.tuning_mode)
 
         if(self.tuning_mode):
             self.detector.create_tuning_window(self.tuning_params)
@@ -61,7 +66,7 @@ class DetectBall(Node):
         self.get_logger().info('Looking for the ball...')
 
 
-    def callback(self, data):
+    def process_image_for_ball_detection(self, data):
         try:
             # only for debugging and testing
             # self.get_logger().info(f"Recived image")
@@ -70,8 +75,8 @@ class DetectBall(Node):
             if (self.tuning_mode):
                 self.tuning_params = self.detector.get_tuning_params()
 
-            keypoints_norm, out_image, tuning_image = self.detector.find_circles(cv_image, self.tuning_mode)
-            if self.tuning_mode:
+            keypoints_norm, out_image, tuning_image = self.detector.find_circles(cv_image)
+            if self.tuning_mode or self.publish_tuning_img:
                 img_to_pub = self.bridge.cv2_to_imgmsg(out_image, "bgr8")
                 img_to_pub.header = data.header
                 self.image_out_pub.publish(img_to_pub)
@@ -80,19 +85,21 @@ class DetectBall(Node):
                 img_to_pub.header = data.header
                 self.image_tuning_pub.publish(img_to_pub)
 
-            point_out = Point()
-
             # Keep the biggest point, They are already converted to normalised coordinates
-            for kp in keypoints_norm:                
-                if (kp.size > point_out.z):                    
-                    point_out.x = kp.pt[0]
-                    point_out.y = kp.pt[1]
-                    point_out.z = kp.size
+            max_kp = max(keypoints_norm, 
+                     key=lambda kp: kp.size, 
+                     default=KeyPoint(x=0, y=0, size=0))
+            
 
-            if (point_out.z > 0):
+
+            if (max_kp.size > 0):
+                point_out = BallInfo()
+                point_out.pos_x = max_kp.pt[0]
+                point_out.pos_y = max_kp.pt[1]
+                point_out.size = max_kp.size
                 self.ball_pub.publish(point_out)
                 # only for debugging and testing
-                self.get_logger().info(f"Ball detected: ({point_out.x}, {point_out.y}),  {point_out.z}")
+                # self.get_logger().info(f"Ball detected: ({point_out.pos_x}, {point_out.pos_y}),  {point_out.size}")
         except Exception as e:
             self.get_logger().error(e)
 

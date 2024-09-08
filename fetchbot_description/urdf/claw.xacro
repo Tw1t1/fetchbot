@@ -1,0 +1,77 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+    <xacro:property name="claw_length" value="0.08" />
+    <xacro:property name="claw_width" value="0.15" />
+    <xacro:property name="claw_height" value="0.013" />
+    <xacro:property name="gripper_length" value="0.045" />
+    <xacro:property name="gripper_width" value="0.03" />
+    <xacro:property name="gripper_height" value="0.013" />
+
+    <link name="claw_link">
+        <visual>
+            <geometry>
+                <box size="${claw_length} ${claw_width} ${claw_height}" />
+            </geometry>
+            <material name="purple" />
+        </visual>
+        <collision>
+            <geometry>
+                <box size="${claw_length} ${claw_width} ${claw_height}" />
+            </geometry>
+        </collision>
+        <xacro:box_inertia m="0.1" l="${claw_length}" w="${claw_width}" h="${claw_height}"
+                           xyz="0 0 0" rpy="0 0 0" />
+    </link>
+
+    <link name="left_gripper_link">
+        <visual>
+            <geometry>
+                <box size="${gripper_length} ${gripper_width} ${gripper_height}" />
+            </geometry>
+            <material name="purple" />
+        </visual>
+        <collision>
+            <geometry>
+                <box size="${gripper_length} ${gripper_width} ${gripper_height}" />
+            </geometry>
+        </collision>
+        <xacro:box_inertia m="0.1" l="${gripper_length}" w="${gripper_width}" h="${gripper_height}"
+                           xyz="0 0 0" rpy="0 0 0" />
+    </link>
+
+    <link name="right_gripper_link">
+        <visual>
+            <geometry>
+                <box size="${gripper_length} ${gripper_width} ${gripper_height}" />
+            </geometry>
+            <material name="purple" />
+        </visual>
+        <collision>
+            <geometry>
+                <box size="${gripper_length} ${gripper_width} ${gripper_height}" />
+            </geometry>
+        </collision>
+        <xacro:box_inertia m="0.1" l="${gripper_length}" w="${gripper_width}" h="${gripper_height}"
+                           xyz="0 0 0" rpy="0 0 0" />
+    </link>
+
+    <joint name="claw_left_gripper_joint" type="fixed">
+        <parent link="claw_link" />
+        <child link="left_gripper_link" />
+        <origin xyz="${(gripper_length + claw_length) / 2.0} ${(claw_width - gripper_width) / 2.0} 0" rpy="0 0 0" />
+    </joint>
+
+    <joint name="claw_right_gripper_joint" type="fixed">
+        <parent link="claw_link" />
+        <child link="right_gripper_link" />
+        <origin xyz="${(gripper_length + claw_length) / 2.0} ${-(claw_width - gripper_width) / 2.0} 0" rpy="0 0 0" />
+    </joint>
+
+    <joint name="base_claw_joint" type="fixed">
+        <parent link="base_link" />
+        <child link="claw_link" />
+        <origin xyz="${(claw_length + base_length) / 2.0} 0 ${-claw_height / 2.0}" rpy="0 0 0" />
+    </joint>
+
+</robot>

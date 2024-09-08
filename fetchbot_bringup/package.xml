@@ -9,7 +9,12 @@
 
   <buildtool_depend>ament_cmake</buildtool_depend>
 
-  <exec_depend>fetchbot_description</exec_depend>
+  <depend>fetchbot_description</depend>
+  <depend>fetchbot_interfaces</depend>
+  <depend>suppressor_inhibitor</depend>
+  <depend>obstacle_avoidance</depend>
+  <depend>wander</depend>
+
   <exec_depend>robot_state_publisher</exec_depend>
   <exec_depend>gazebo_ros</exec_depend>
 

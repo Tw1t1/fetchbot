@@ -24,11 +24,7 @@ setup(
     entry_points={
         'console_scripts': [
             'claw_controller = grab_ball.claw_controller:main',
-            'locomotion_controller = grab_ball.locomotion_controller:main',
             'grab_ball = grab_ball.ball_grabber:main',
-            'message_counter = grab_ball.message_counter:main',
-            'distance_classifier = grab_ball.distance_classifier:main',
-            'video_frame_publisher = grab_ball.video_frame_publisher:main',
         ],
     },
 )

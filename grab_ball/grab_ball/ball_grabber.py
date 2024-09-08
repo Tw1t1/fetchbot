@@ -2,7 +2,7 @@ import numpy as np
 import rclpy
 from rclpy.node import Node
 from std_msgs.msg import String, Float64
-from geometry_msgs.msg import Point
+from fetchbot_interfaces.msg import BallInfo
 from enum import Enum
 import time
 import joblib
@@ -19,7 +19,7 @@ class GrabBall(Node):
         super().__init__('grab_ball')
 
         self.position_sub = self.create_subscription(Float64, 'position', self.position_callback, 10)
-        self.ball_info_sub = self.create_subscription(Point, '/detected_ball', self.ball_info_callback, 10)
+        self.ball_info_sub = self.create_subscription(BallInfo, '/detected_ball', self.ball_info_callback, 10)
         self.grab_ball_status_pub = self.create_publisher(String, 'grab_ball/status', 10)
         self.claw_cmd_pub = self.create_publisher(String, 'claw_cmd', 10)
 
@@ -51,6 +51,7 @@ class GrabBall(Node):
         self.previous_position = None
         self.unchanged_position_count = 0
         self.stable_position_count_threshold = 3
+        self.estimated_dist_to_grab = 6.5
 
 
     def load_models(self):
@@ -70,6 +71,7 @@ class GrabBall(Node):
         if self.current_status == GrabStatus.GRABBED and \
             (current_time - self.lastrcvtime) > self.rcv_timeout_secs: 
             self.open_claw()
+            self.get_logger().info('Ball released!!!!!!')
             self.current_status = GrabStatus.WAITING
         
         # Publish the current grab status
@@ -89,6 +91,13 @@ class GrabBall(Node):
             if self.is_ball_grabbed():
                 self.stop_claw()
                 self.current_status = GrabStatus.GRABBED
+                self.get_logger().info('Ball grabbed!!!!!!!!')
+            
+            # If we're closing but the position is out of range, open the claw (missed grab)
+            if self.current_status == GrabStatus.CLOSING and self.current_position > self.position_range_max:
+                self.open_claw()
+                self.current_status = GrabStatus.WAITING
+        
         except Exception as e:
             self.get_logger().error(f'Error in position_callback: {str(e)}')
 
@@ -98,8 +107,8 @@ class GrabBall(Node):
             return False
         
         estimated_dist, is_grabable = self.predict_distance(msg)
-
-        return is_grabable and estimated_dist <= 7.0
+        # self.get_logger().info(f'Distance : {estimated_dist:.3f}, Grabable {is_grabable}')
+        return is_grabable and estimated_dist <= self.estimated_dist_to_grab
 
     def ball_info_callback(self, msg):
         self.lastrcvtime = time.time()
@@ -107,12 +116,9 @@ class GrabBall(Node):
         try:
             # If we should grab the ball, close it
             if self.should_grab_ball(msg):
+                self.get_logger().info('Closing claw to grab the ball')
                 self.close_claw()
                 self.current_status = GrabStatus.CLOSING
-            # If we're closing but the position is out of range, open the claw (missed grab)
-            elif self.current_status == GrabStatus.CLOSING and self.current_position > self.position_range_max:
-                self.open_claw()
-                self.current_status = GrabStatus.WAITING
         except Exception as e:
             self.get_logger().error(f'Error in ball_info_callback: {str(e)}')
 
@@ -152,7 +158,7 @@ class GrabBall(Node):
 
     def predict_distance(self, ball_info):
         # Use the pre-trained models to predict the distance to the ball and if it's graspable
-        features = np.array([[ball_info.z, ball_info.x, ball_info.y]])
+        features = np.array([[ball_info.size, ball_info.pos_x, ball_info.pos_y]])
 
         estimated_distance = self.rf_model.predict(features)[0]
         is_graspable = self.binary_model.predict(features)[0]
@@ -169,7 +175,6 @@ class GrabBall(Node):
         self._publish_claw_command('open')
 
     def _publish_claw_command(self, command):
-        # Helper method to publish claw commands
         claw_cmd = String()
         claw_cmd.data = command
         self.claw_cmd_pub.publish(claw_cmd)

@@ -3,13 +3,12 @@
 
 import rclpy
 from rclpy.node import Node
-from geometry_msgs.msg import Point, Twist
 from std_msgs.msg import String
 import time
 from math import pi
 from enum import Enum
 from ball_follow.state_machine import StateMachine
-
+from fetchbot_interfaces.msg import Heading, BallInfo
 
 # """
 # This module implements a ball follower node for ROS2.
@@ -21,24 +20,26 @@ class FollowerStatus(Enum):
     FOLLOWING = 1
     SEARCHING = 2
     UNREACHABLE = 3
+    ARRIVED = 4
     
 
 class FollowBall(Node):
-
     def __init__(self):
         super().__init__('follow_ball')
 
         self.subscription = self.create_subscription(
-            Point, '/detected_ball', self.process_ball_detection, 10)
+            BallInfo, '/detected_ball', self.process_ball_detection, 10)
         
         self.publisher_ = self.create_publisher(
-            Twist, '/follow_ball', 10)
-        
+            Heading, '/follow_ball', 10)
+                        
         self.status_publisher = self.create_publisher(
             String, '/follow_ball/status', 10)
+
+        self.follow_rate = 1.0/10.0 #  frequency 10 Hz        
+        self.create_timer(self.follow_rate, self.broadcast_current_status)
         
-        self.create_timer(1.0, self.broadcast_current_status)
-        self.create_timer(0.1, self.execute_ball_following_cycle)
+        self.create_timer(self.follow_rate, self.execute_ball_following_cycle)
 
         self.declare_follow_parameters()
         self.setup_state_machine()
@@ -57,10 +58,6 @@ class FollowBall(Node):
         if current_time - self.lastrcvtime >= self.rcv_timeout_secs:
             if self.ball_detected:
                 # Ball was previously detected but now lost
-                if self.search_start_time is None:
-                    # This is the first time we're starting to search
-                    self.search_start_time = current_time
-                    self.total_rotation = 0.0
                 # Transition to the SEARCHING state to look for the ball
                 self.state_machine.transition_to(FollowerStatus.SEARCHING)
             else:
@@ -69,25 +66,6 @@ class FollowBall(Node):
 
         self.state_machine.update()
         
-
-    def process_ball_detection(self, msg):
-        """
-        Process incoming ball detection data and update target information.
-        """
-        f = self.filter_value
-        self.target_val = self.target_val * f + msg.x * (1-f)
-        self.target_dist = self.target_dist * f + msg.z * (1-f)
-        self.lastrcvtime = time.time()
-        self.ball_detected = True
-
-        if self.is_ball_unchanged(msg):
-            self.state_machine.transition_to(FollowerStatus.UNREACHABLE)
-        # elif self.state_machine.get_current_state() == FollowerStatus.UNREACHABLE:
-        else:
-            self.state_machine.transition_to(FollowerStatus.FOLLOWING)
-
-        # only for debugging and testing
-        self.get_logger().info(f'Received Point: ({msg.x}, {msg.y}) ball size: {msg.z}')
 
 
     def is_ball_unchanged(self, current_ball_data):
@@ -101,9 +79,9 @@ class FollowBall(Node):
             return False
 
         # Check x, y and size change
-        x_change = abs(current_ball_data.x - self.last_ball_data.x) <= self.position_threshold
-        y_change = abs(current_ball_data.y - self.last_ball_data.y) <= self.position_threshold
-        size_change = abs(current_ball_data.z - self.last_ball_data.z) <= self.size_threshold
+        x_change = abs(current_ball_data.pos_x - self.last_ball_data.pos_x) <= self.position_threshold
+        y_change = abs(current_ball_data.pos_y - self.last_ball_data.pos_y) <= self.position_threshold
+        size_change = abs(current_ball_data.size - self.last_ball_data.size) <= self.size_threshold
 
         if (x_change and y_change and size_change) :
             # Ball hasn't changed significantly
@@ -118,57 +96,65 @@ class FollowBall(Node):
 
         return False
 
-    def broadcast_current_status(self):
+
+    def process_ball_detection(self, msg):
         """
-        Publish the current status of the ball follower.
+        Process incoming ball detection data and update target information.
         """
-        status_msg = String(data=self.state_machine.get_current_state().name)
-        self.status_publisher.publish(status_msg)
+        f = self.filter_value
+        self.target_val = self.target_val * f + msg.pos_x * (1-f)
+        self.target_dist = self.target_dist * f + msg.size * (1-f)
+        self.lastrcvtime = time.time()
+        self.ball_detected = True
+        
+        if self.is_ball_unchanged(msg):
+            self.state_machine.transition_to(FollowerStatus.UNREACHABLE)
+        else:
+            self.state_machine.transition_to(FollowerStatus.FOLLOWING)
+
+        # only for debugging and testing
+        # self.get_logger().info(f'Received Point: ({msg.pos_x:.1f}, {msg.pos_y:.1f}) ball size: {msg.size:.1f}')
 
 
+    def on_following(self):
+        msg = Heading()
+        
+        if self.target_dist < self.max_size_thresh:
+            msg.distance = self.forward_chase_speed
+        msg.angle = -self.angular_chase_multiplier * self.target_val
 
-    def setup_state_machine(self):
-        state_actions = {
-            FollowerStatus.WAITING: self.on_waiting,
-            FollowerStatus.FOLLOWING: self.on_following,
-            FollowerStatus.SEARCHING: self.on_searching,
-            FollowerStatus.UNREACHABLE: self.on_unreachable
-        }
-        self.state_machine = StateMachine(FollowerStatus.WAITING, state_actions)
+        self.publisher_.publish(msg)
+        
+        self.searching_count = 0 
+        # only for debugging and testing
+        # self.get_logger().info(f'Heading published, x: {msg.distance}, z: {msg.angle}')
 
 
     def on_waiting(self):
         # do nothing
         pass
 
-
-    def on_following(self):
-        msg = Twist()
-        if self.target_dist < self.max_size_thresh:
-            msg.linear.x = self.forward_chase_speed
-        msg.angular.z = -self.angular_chase_multiplier * self.target_val
-        
-        self.publisher_.publish(msg)
-        # only for debugging and testing
-        self.get_logger().info(f'Heading published, x: {msg.linear.x}, z: {msg.angular.z}')
-
-
+    # based on if (1.0 / turn_frequency) * count * angular_velocity > turn_angle
     def on_searching(self):
-        msg = Twist()
-        current_time = time.time()
-        rotation_needed = 2*pi * self.search_rotations
-        time_passed = current_time - self.search_start_time
-        self.total_rotation = abs(self.search_angular_speed * time_passed)
-
-        if self.total_rotation < rotation_needed:
-            msg.angular.z = self.search_angular_speed
-        else:
-            self.state_machine.transition_to(FollowerStatus.WAITING)
-            self.ball_detected = False
         
+        msg = Heading()
+        angular_velocity = -self.search_angular_speed * (self.target_val/abs(self.target_val))
+        msg.angle = angular_velocity
+        
+        
+        turn_angle = 2 * pi * self.search_rotations * 2.3
+        current_angle = self.follow_rate * self.searching_count * abs(angular_velocity)
+        
+        self.searching_count += 1
+        if current_angle > turn_angle:
+            self.ball_detected = False
+            self.searching_count = 0
+            msg.angle = 0.0  # Stop rotating
+
         self.publisher_.publish(msg)
         # only for debugging and testing
-        self.get_logger().info(f'Heading published, x: {msg.linear.x}, z: {msg.angular.z}')
+        # self.get_logger().info(f'Heading published, x: {msg.distance}, z: {msg.angle}')
+
 
     def on_unreachable(self):
         # right now do nothing, in futer may can upload some specifiec behavior
@@ -183,9 +169,8 @@ class FollowBall(Node):
 
         # Variables for search behavior
         self.ball_detected = False
-        self.search_start_time = None
-        self.total_rotation = 0.0
-
+        self.searching_count = 0
+        
         # Variables for unchange ball data
         self.last_ball_data = None
         self.unchanged_start_time = None
@@ -216,6 +201,21 @@ class FollowBall(Node):
         self.size_threshold = self.get_parameter('size_threshold').get_parameter_value().double_value
         self.unchanged_time_threshold = self.get_parameter('unchanged_time_threshold').get_parameter_value().double_value
 
+    def broadcast_current_status(self):
+        """
+        Publish the current status of the ball follower.
+        """
+        status_msg = String(data=self.state_machine.get_current_state().name)
+        self.status_publisher.publish(status_msg)
+
+    def setup_state_machine(self):
+        state_actions = {
+            FollowerStatus.WAITING: self.on_waiting,
+            FollowerStatus.FOLLOWING: self.on_following,
+            FollowerStatus.SEARCHING: self.on_searching,
+            FollowerStatus.UNREACHABLE: self.on_unreachable
+        }
+        self.state_machine = StateMachine(FollowerStatus.WAITING, state_actions)
 
 
 def main(args=None):

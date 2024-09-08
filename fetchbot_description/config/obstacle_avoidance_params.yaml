@@ -1,0 +1,9 @@
+bumper:
+  ros__parameters:
+    left_bumper_pin: 4
+    right_bumper_pin: 18
+    left_angle: 2.35
+    right_angle: -2.35
+    rear_angle: 3.14
+    right_range: 0.5
+    left_range: 0.5
