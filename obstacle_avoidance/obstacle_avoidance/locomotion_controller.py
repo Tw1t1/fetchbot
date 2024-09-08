@@ -13,17 +13,13 @@ class LocomotionControllerNode(Node):
             'avoid_runaway_suppressor',
             self.heading_callback,
             10)
-        self.publisher = self.create_publisher(Twist, '/diff_cont/cmd_vel_unstamped', 10)
         self.joint_states_subscription = self.create_subscription(
             JointState,
             '/joint_states',
             self.joint_states_callback,
             10)
+        self.publisher = self.create_publisher(Twist, '/diff_cont/cmd_vel_unstamped', 10)
         self.timer = self.create_timer(0.05, self.timer_callback)  # 20 Hz
-
-        # Robot parameters
-        self.wheel_separation = 0.385
-        self.wheel_radius = 0.0525
 
         # Control parameters
         self.max_linear_velocity = 0.4
@@ -34,13 +30,7 @@ class LocomotionControllerNode(Node):
 
         # State variables
         self.current_heading = None
-        self.current_linear_velocity = 0.0
-        self.current_angular_velocity = 0.0
-        self.left_wheel_pos = 0.0
-        self.right_wheel_pos = 0.0
         self.obstacle_detected = False
-        self.reverse_start_position = 0.0
-        self.is_reversing = False
         self.last_action = 'none'
 
         # Timeout handling
@@ -122,9 +112,6 @@ class LocomotionControllerNode(Node):
         twist.linear.x = 0.0
         twist.angular.z = 0.0
         self.publisher.publish(twist)
-        self.current_linear_velocity = 0.0
-        self.current_angular_velocity = 0.0
-        self.is_reversing = False
         self.last_action = 'none'
 
 
